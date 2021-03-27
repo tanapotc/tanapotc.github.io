@@ -4,8 +4,15 @@
     <head>
         <title>TEST</title>
     </head>
-        <body>
-                <button>TEST</button>
+        <body> <div id="main">...</div>
+            <script src="https://unpkg.com/vue@next"></script>
+            <script>
+                var test = { }
+                test.template = "<i> Welcome to Vue.js </i>" +
+                                "<button>Test</button>" +
+                                "<input>"
+                Vue.createApp(test).mount("#main")
+            </script>
         </body>
 
 </html>
