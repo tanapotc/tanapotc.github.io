@@ -16,27 +16,19 @@ header {
     background-size: cover;
     background-position: center;
     position: relative;
+    
 }
 
-section{
-    height: 700px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-}
 
 footer {
-    height: 80px;
-    background-size: 80px;
+    height: 70px;
     background-color: rgba(35, 35, 35, 0.743);
-    position: relative;
 }
 
 header::after {
     content: "";
     position: absolute;
     top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
@@ -85,13 +77,49 @@ ul.menu li a:hover {
 .section-wrapper{
     display: flex;
     align-items: center;
-    /* border: 1px solid red; */
-    height: 500px;
-    margin-top: 5rem;
     position: relative;
     z-index: 10;
+    padding: 50px 0;
+    justify-content: space-around;
+    
 }
 
+.order {
+    height: 300px;
+    position: relative; 
+    resize: cover;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.flex {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+.flex-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    }
+
+.flex-item img {
+    margin-bottom: 10px;   
+    }
+
+.T1 {
+    font-size: 24px;
+    color: rgb(128, 128, 128);
+    font-weight: bold;
+    text-align: center;
+  }
+.T2 {
+    text-align: center;
+  border: 1px solid red;
+  }
+  
 .logo h1 {
     font-size: 2rem;
 }
