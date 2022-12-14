@@ -133,6 +133,7 @@ ul.menu li a:hover {
     color: #000;
     background: #fff;
     padding: .5rem;
+    border-radius: 18px;
 }
 
 .footer-info {
