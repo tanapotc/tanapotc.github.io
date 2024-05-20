@@ -10,6 +10,10 @@
     margin: 0 auto;
 }
 
+.text_contain{
+    width: 50vw;
+}
+
 header {
     height: 700px;
     background: url('https://images.unsplash.com/photo-1525641471590-a2c3f6aea092?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1267&q=80&fbclid=IwAR2JgHKHsXOzbIbIb8aMOQdNegWP0h-T1UgGSIbYoeGPWXMZ5I0pxbbbG1g') no-repeat;
