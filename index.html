@@ -8,7 +8,7 @@
     <!-- <script src="https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js"></script> -->
 <!--     <script src="https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippet.js"></script> -->
 <!-- <script src="https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippet.js?auth_token=ASDF&userId=ArjarnRed&modelId=112"></script> -->
-        <script src="https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippet.js?auth_token=ASDF&userId=ArjarnRed&modelId=2"></script>
+<!--         <script src="https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippet.js?auth_token=ASDF&userId=ArjarnRed&modelId=2"></script> -->
     <!-- <script src="http://localhost:8080/Snippet/ChatFrameworkSnippet.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11"></script>
   </head>
@@ -63,6 +63,28 @@ Promotion, advertisement to be seen on IG and Twitter.</br>
     </footer>
   </body>
 
+ <script>
+    window.addEventListener('DOMContentLoaded', function() {
+        // รับ URL ปัจจุบัน
+        let currentUrl = new URL(window.location);
+console.log(currentUrl)
+        // ดึงค่า parameter
+        let authToken = currentUrl.searchParams.get("auth_token");
+        let userId = currentUrl.searchParams.get("userId");
+        let modelId = currentUrl.searchParams.get("modelId");
+
+        // สร้างสคริปต์และแทรกเข้าไปในหน้า HTML
+        let script = document.createElement('script');
+        if(authToken == null || userId == null || modelId == null){
+          script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippet.js`;
+          // script.src = `http://localhost:8080/Snippet/ChatFrameworkSnippet.js`;
+        }else{
+          script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
+          // script.src = `http://localhost:8080/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
+        }
+        document.head.appendChild(script);
+    });
+    </script>  
   
   <script>
     var typed = new Typed('#type', {
