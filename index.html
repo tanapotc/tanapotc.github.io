@@ -76,13 +76,13 @@ console.log(currentUrl)
         // สร้างสคริปต์และแทรกเข้าไปในหน้า HTML
         let script = document.createElement('script');
         if(authToken == null || userId == null || modelId == null){
-          script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippet.js`; 
-          // script.src = `https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippet.js`;
+          // script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippet.js`; 
+          script.src = `https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippet.js`;
           // script.src = `http://localhost:8080/Snippet/ChatFrameworkSnippet.js`;
         }else{
           // script.src = `https://portal.askmeplease.ai/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
-          script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
-          // script.src = `https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
+          // script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
+          script.src = `https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
           // script.src = `http://localhost:8080/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`; 
         }
         document.head.appendChild(script);
