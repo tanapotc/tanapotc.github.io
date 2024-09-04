@@ -29,17 +29,17 @@
           let script = document.createElement('script');
           if(authToken == null || userId == null || modelId == null){
             // script.src = `https://portal.askmeplease.ai/Snippet/ChatFrameworkSnippetFull.js`;
-            // script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js`;            
+            script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js`;            
             // script.src = `https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js`;
-            script.src = `https://testdotnet8-frh7a5f0evdwdzh0.southeastasia-01.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js`;
+            // script.src = `https://testdotnet8-frh7a5f0evdwdzh0.southeastasia-01.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js`;
 
             // script.src = `http://localhost:8080/Snippet/ChatFrameworkSnippet.js`;
           }else{
             // script.src = `https://portal.askmeplease.ai/Snippet/ChatFrameworkSnippetFull.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
-            // script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
+            script.src = `https://stg-fusionchatbots.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
             // script.src = `http://localhost:8080/Snippet/ChatFrameworkSnippet.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
             // script.src = `https://dev-frontend-fusionbot.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
-            script.src = `https://testdotnet8-frh7a5f0evdwdzh0.southeastasia-01.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
+            // script.src = `https://testdotnet8-frh7a5f0evdwdzh0.southeastasia-01.azurewebsites.net/Snippet/ChatFrameworkSnippetFull.js?auth_token=${authToken}&userId=${userId}&modelId=${modelId}`;
         
 
           }
