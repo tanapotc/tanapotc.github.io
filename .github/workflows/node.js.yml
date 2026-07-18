@@ -20,8 +20,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate portfolio HTML
-        shell: python
+        shell: bash
         run: |
+          set -euo pipefail
+          python3 - <<'PY'
           from html.parser import HTMLParser
           from pathlib import Path
 
@@ -59,3 +61,4 @@ jobs:
               raise SystemExit("Unresolved merge markers found in index.html")
 
           print("Static portfolio validation passed.")
+          PY
