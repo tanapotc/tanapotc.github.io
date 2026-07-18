@@ -2,9 +2,11 @@ name: Static site CI
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -17,28 +19,43 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate required website files
-        shell: bash
+      - name: Validate portfolio HTML
+        shell: python
         run: |
-          set -euo pipefail
-          test -f index.html
-          grep -qi '<!doctype html' index.html
-          grep -qi '<title>' index.html
-          grep -qi '</html>' index.html
+          from html.parser import HTMLParser
+          from pathlib import Path
 
-      - name: Check for unresolved merge markers
-        shell: bash
-        run: |
-          set -euo pipefail
-          if grep -RInE '^(<<<<<<<|=======|>>>>>>>)' --exclude-dir=.git .; then
-            echo 'Unresolved merge markers found.'
-            exit 1
-          fi
+          path = Path("index.html")
+          if not path.is_file():
+              raise SystemExit("index.html is missing")
 
-      - name: Verify internal section links
-        shell: bash
-        run: |
-          set -euo pipefail
-          for id in home about experience projects skills contact; do
-            grep -q "id=\"$id\"" index.html
-          done
+          content = path.read_text(encoding="utf-8")
+          lowered = content.lower()
+
+          required_text = ["<!doctype html", "<title>", "</html>"]
+          for token in required_text:
+              if token not in lowered:
+                  raise SystemExit(f"Required HTML token is missing: {token}")
+
+          required_ids = {"home", "about", "experience", "projects", "skills", "contact"}
+          found_ids = set()
+
+          class PortfolioParser(HTMLParser):
+              def handle_starttag(self, tag, attrs):
+                  attributes = dict(attrs)
+                  element_id = attributes.get("id")
+                  if element_id:
+                      found_ids.add(element_id)
+
+          parser = PortfolioParser()
+          parser.feed(content)
+
+          missing = sorted(required_ids - found_ids)
+          if missing:
+              raise SystemExit(f"Required section IDs are missing: {', '.join(missing)}")
+
+          conflict_markers = ("<<<<<<<", ">>>>>>>")
+          if any(marker in content for marker in conflict_markers):
+              raise SystemExit("Unresolved merge markers found in index.html")
+
+          print("Static portfolio validation passed.")
