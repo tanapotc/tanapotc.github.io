@@ -38,7 +38,7 @@
         throw new InvalidOperationException("Agent exceeded max steps");
 }</pre></section>
 <section><h2>ควรใช้ Agent หรือ Workflow ธรรมดา?</h2><div class="two pick"><div class="g"><h3>คุ้มที่จะทำเป็น Agent เมื่อ</h3><ul><li>ลำดับขั้นตอนไม่ตายตัวและขึ้นกับข้อมูลที่เจอระหว่างทาง</li><li>ต้องเลือกจากหลาย tool หรือค้นข้อมูลหลายรอบ</li><li>งานต้องตรวจผลของตัวเองแล้วแก้แผนต่อ</li><li>มี guardrail และ human approval รองรับ action เสี่ยง</li></ul></div><div class="r"><h3>Workflow เหมาะกว่าเมื่อ</h3><ul><li>ขั้นตอนชัดและคาดเดาได้อยู่แล้ว</li><li>ต้องการ deterministic behavior สูง</li><li>เรื่องผิดพลาดมีต้นทุนสูงและไม่ควรให้โมเดลตัดสินใจลำดับเอง</li><li>ใช้ if/else หรือ state machine แล้วอ่านง่ายกว่า agent</li></ul></div></div></section>
-<div class="summary"><strong>สรุปสำหรับนำเสนอ / สัมภาษณ์</strong><p>Agentic AI คือการให้ LLM เป็นตัวตัดสินใจ “ขั้นตอนถัดไป” ภายใต้เครื่องมือและกติกาที่ระบบกำหนดไว้ โดยวน Think → Act → Observe จนบรรลุ goal จุดสำคัญใน production ไม่ใช่แค่เลือกโมเดลเก่ง แต่คือออกแบบ tools, permissions, guardrails, observability และ human-in-the-loop ให้ดี</p></div>
+<div class="summary"><strong>สรุปใจความสำคัญ</strong><p>Agentic AI คือการให้ LLM เป็นตัวตัดสินใจ “ขั้นตอนถัดไป” ภายใต้เครื่องมือและกติกาที่ระบบกำหนดไว้ โดยวน Think → Act → Observe จนบรรลุ goal จุดสำคัญใน production ไม่ใช่แค่เลือกโมเดลเก่ง แต่คือออกแบบ tools, permissions, guardrails, observability และ human-in-the-loop ให้ดี</p></div>
 <footer>Tanapot Knowledge · Agentic AI</footer>
 </main>
 <script>
