@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Unit Testing สำหรับ .NET และ xUnit: Test Pyramid, Arrange-Act-Assert, test case design, test doubles, layer testing, test smells และ project structure">
+<title>Unit Testing .NET / xUnit | Tanapot Knowledge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2f5;--grid:#1b2a4114;--ink:#1b2a41;--ink2:#4a5a6e;--line:#b9c4d0;--arr:#1e6fb8;--act:#7b4fa0;--ass:#2e7d4f;--bad:#c8503a;--good:#2e7d4f;--warn:#d08a1e;--hi:#ffd966;--font:'IBM Plex Sans Thai',system-ui,sans-serif;--code:'IBM Plex Mono',ui-monospace,monospace}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;line-height:1.7;font-size:17px}.top{position:sticky;top:0;z-index:20;background:#eef2f5ee;border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}.top-inner{max-width:1140px;margin:auto;padding:12px 24px;display:flex;justify-content:space-between;gap:16px}.top a{text-decoration:none;color:var(--ink);font-weight:600}.top .back{font:13px var(--code);color:var(--ink2)}main{max-width:1140px;margin:auto;padding:42px 24px 96px}h1,h2,h3{line-height:1.25;margin:0}h1{font-size:clamp(30px,4.6vw,48px)}h2{font-size:clamp(22px,2.8vw,30px);margin-bottom:7px}.no{font:400 .62em var(--code);color:var(--ink2);margin-right:10px}h3{font-size:18px}p{margin:0 0 12px;max-width:66ch}.lead{font-size:19px;color:var(--ink2);max-width:66ch}section{margin-top:76px}code{font-family:var(--code);font-size:.9em;background:#fff;border:1px solid var(--line);padding:1px 6px;border-radius:4px}pre{font:12.5px/1.55 var(--code);background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:14px 16px;overflow:auto;white-space:pre-wrap;margin:0}.jump{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.jump a{font-size:14px;text-decoration:none;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:5px 13px}.two{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.canvas{background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:20px;box-shadow:6px 6px 0 #1b2a411f}.one{font-size:15px;color:var(--ink2);border-left:3px solid var(--hi);background:#fff;padding:10px 14px;margin-top:16px;max-width:none}.tag{display:inline-block;font:11px var(--code);padding:2px 8px;border-radius:4px;color:#fff;margin-bottom:7px}.tag.good{background:var(--good)}.tag.bad{background:var(--bad)}table{width:100%;border-collapse:collapse;background:#fff;border:1.5px solid var(--ink);font-size:14.5px}th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{background:#f3f6f9}td:first-child{font-weight:600;color:var(--ink2)}.yes{color:var(--good);font-weight:600}.warn{color:var(--warn);font-weight:600}.pyr{display:flex;flex-direction:column;align-items:center;gap:6px}.pyr div{border:2px solid var(--ink);border-radius:7px;background:#fff;text-align:center;padding:8px 10px;font-size:13.5px}.pyr div b{display:block;font:12.5px var(--code)}.pyr small{display:block;color:var(--ink2);font-size:12px}.pyr .e2e{width:40%;border-color:var(--bad)}.pyr .int{width:68%;border-color:var(--warn)}.pyr .unit{width:100%;border-color:var(--good);background:#eef8f1}.aaa{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}.aaa div{border:2px solid;border-radius:7px;padding:11px 12px;background:#fff;font-size:13.5px}.aaa b{display:block;font:13px var(--code);margin-bottom:4px}.aaa .a1{border-color:var(--arr);background:#e6f0fa}.aaa .a2{border-color:var(--act);background:#f0e8f7}.aaa .a3{border-color:var(--ass);background:#e4f3ea}.cd .rule{font:13px var(--code);background:#f3f6f9;border:1.5px solid var(--line);border-radius:7px;padding:10px 14px;margin-bottom:12px}.btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.btns button{font-family:var(--font);font-size:14px;background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}.btns button[aria-pressed=true]{background:var(--ink);color:#fff}.axis{position:relative;height:78px;margin:24px 8px 10px}.ln{position:absolute;left:0;right:0;top:35px;height:2px;background:var(--ink)}.zone{position:absolute;top:22px;height:26px;border-radius:4px;opacity:.18}.zone.ok{background:var(--good)}.zone.no{background:var(--bad)}.pt{position:absolute;top:25px;width:20px;height:20px;border-radius:50%;border:2px solid;background:#fff;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;font:10px var(--code);opacity:0}.pt.show{opacity:1}.pt.ok{border-color:var(--good);color:var(--good)}.pt.no{border-color:var(--bad);color:var(--bad)}.lb{position:absolute;top:54px;transform:translateX(-50%);font:11px var(--code);color:var(--ink2);white-space:nowrap}.lb.top{top:-2px}.cases div{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);opacity:.25}.cases div.show{opacity:1}.cases .n,.cases .v{font:12px var(--code)}.cases .v.ok{color:var(--good)}.cases .v.no{color:var(--bad)}.cnt{font:12.5px var(--code);color:var(--ink2);margin-top:10px}.dbl{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.dbl>div{background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:14px}.dbl h3{font:16px var(--code);margin-bottom:6px}.dbl p{font-size:13.5px;color:var(--ink2)}.when{font-size:12.5px;background:#f3f6f9;border-radius:4px;padding:6px 8px}.tree{font:12px/1.65 var(--code);white-space:pre;overflow:auto;background:#f3f6f9;border-radius:6px;padding:11px}.check{background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:6px 18px}.check label{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}.check label:last-child{border:0}.check input{margin-top:6px;width:16px;height:16px;accent-color:var(--good)}.check small{display:block;color:var(--ink2);font-size:13px}.progress{font:13px var(--code);color:var(--ink2);margin-bottom:10px}.summary{margin-top:72px;background:var(--ink);color:#fff;border-radius:8px;padding:24px}.summary p{color:#dbe3ec;margin:8px 0 0}footer{margin-top:48px;color:var(--ink2);font-size:14px}@media(max-width:900px){.two,.dbl{grid-template-columns:1fr}}@media(max-width:640px){.aaa{grid-template-columns:1fr}.cases div{grid-template-columns:auto 1fr}.cases .v{grid-column:2}table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{border-bottom:1px solid var(--line)}td{border:0;padding:6px 12px}td:first-child{padding-top:13px}.top-inner{padding:10px 16px}main{padding-left:18px;padding-right:18px}}
+</style></head>
+<body><nav class="top"><div class="top-inner"><a href="../knowledge.html">← รวมสาระ</a><a class="back" href="../index.html">Portfolio</a></div></nav><main>
+<header><div style="font:12px var(--code);color:var(--ink2);letter-spacing:.08em;margin-bottom:10px">.NET · XUNIT · TESTING</div><h1>Unit Test<br>ทดสอบ “พฤติกรรม” ไม่ใช่ “บรรทัดโค้ด”</h1><p class="lead">Unit test ที่ดีอ่านแล้วรู้ว่าระบบสัญญาอะไรไว้ และพังเมื่อสัญญานั้นถูกละเมิด โดยไม่เปราะทุกครั้งที่มีการ refactor บทนี้ใช้ xUnit และเชื่อมแนวคิดกับ Clean Architecture จากบท <a href="repository-pattern-layer-architecture.html">Repository Pattern & Layer Architecture</a></p><nav class="jump"><a href="#s1">Test Pyramid</a><a href="#s2">AAA</a><a href="#s3">Naming</a><a href="#s4">Case Design</a><a href="#s5">Test Doubles</a><a href="#s6">Testing Layers</a><a href="#s7">Test Smells</a><a href="#s8">Project Structure</a><a href="#s9">Checklist</a></nav></header>
+<section id="s1"><h2><span class="no">01</span>Unit Test อยู่ตรงไหนในภาพรวม</h2><p class="lead">“unit” คือหน่วยของพฤติกรรมที่ทดสอบได้โดยไม่ต้องมี database, network, file หรือเวลาจริง ยิ่งอยู่ฐานล่างยิ่งเร็วและควรมีจำนวนมาก</p><div class="two"><div class="canvas"><div class="pyr"><div class="e2e"><b>End-to-end</b>HTTP จริงผ่านทุกชั้นถึง DB<small>ช้าและแพง จึงเก็บไว้เฉพาะ flow สำคัญ</small></div><div class="int"><b>Integration</b>Repository + DB จริง / API ผ่าน WebApplicationFactory<small>ตรวจ SQL, mapping และ DI</small></div><div class="unit"><b>Unit</b>Domain, value object, handler + fake, pure function<small>เร็ว ไม่มี I/O และรันได้จำนวนมาก</small></div></div></div><table><tbody><tr><td>เป้าหมาย</td><td>ให้กล้าแก้โค้ด เพราะ regression ถูกจับได้เร็ว</td></tr><tr><td>Coverage</td><td>ตัวเลข coverage เป็นเพียงสัญญาณ สิ่งสำคัญคือกติกาธุรกิจและ error path</td></tr><tr><td>เริ่มจาก</td><td>Domain → Application → ส่วนที่แตะระบบจริงใช้ Integration</td></tr><tr><td>ไม่จำเป็นต้องเทส</td><td>property ธรรมดา, mapping ตรง ๆ, behavior ของ framework หรือสิ่งที่ compiler บังคับแล้ว</td></tr><tr><td>Unit = 1 class?</td><td>ไม่จำเป็น หน่วยที่เทสคือ “พฤติกรรม” และอาจประกอบด้วยหลาย object ตราบใดที่ไม่มี I/O</td></tr></tbody></table></div></section>
+<section id="s2"><h2><span class="no">02</span>Arrange – Act – Assert</h2><p class="lead">เทสหนึ่งตัวแบ่งเป็น 3 ช่วงให้เห็นชัด ถ้าช่วงใดยาวผิดปกติ มักเป็นสัญญาณว่าการออกแบบ object หรือ test setup ซับซ้อนเกินไป</p><div class="aaa"><div class="a1"><b>Arrange — เตรียม</b>สร้าง object และข้อมูลตั้งต้นให้ตรง scenario</div><div class="a2"><b>Act — ทำ</b>เรียกพฤติกรรมที่กำลังทดสอบหนึ่งครั้ง</div><div class="a3"><b>Assert — ตรวจ</b>ตรวจผลหรือ state ที่เป็นสัญญาของ scenario นั้น</div></div><div class="two" style="margin-top:20px"><pre>// Shop.Domain.Tests/Orders/OrderTests.cs
+[Fact]
+public void Ship_WhenPending_ChangesStatusToShipped()
+{
+    // Arrange
+    var order = OrderBuilder.Pending().WithLines(2).Build();
+
+    // Act
+    order.Ship();
+
+    // Assert
+    order.Status.Should().Be(OrderStatus.Shipped);
+}
+
+[Fact]
+public void Ship_WhenAlreadyShipped_Throws()
+{
+    var order = OrderBuilder.Shipped().Build();
+    var act = () => order.Ship();
+    act.Should().Throw<DomainException>();
+}</pre><table><tbody><tr><td>Arrange</td><td>ใช้ builder/factory เพื่อซ่อน default ที่ไม่เกี่ยวกับ scenario</td></tr><tr><td>Act</td><td>ควรเป็น 1 action หลัก ถ้ามีหลาย action อาจกำลังเทสหลาย behavior</td></tr><tr><td>Assert</td><td>หลาย assertion ได้เมื่อทั้งหมดอธิบายผลของเรื่องเดียวกัน</td></tr><tr><td>หลีกเลี่ยง</td><td><code>if</code>, loop, try/catch ใน test; หลาย input ใช้ <code>[Theory]</code></td></tr></tbody></table></div><p class="one"><strong>Given / When / Then</strong> คือแนวคิดเดียวกันในภาษา BDD: Given = Arrange, When = Act, Then = Assert</p></section>
+<section id="s3"><h2><span class="no">03</span>ตั้งชื่อให้เทสอ่านเป็นข้อกำหนด</h2><p class="lead">ตอน test พัง ชื่อคือสิ่งแรกที่เห็น ชื่อจึงควรบอกพฤติกรรม เงื่อนไข และผลที่คาดหวังได้โดยไม่ต้องเปิด implementation</p><div class="two"><div><span class="tag good">สิ่งที่ทำ_เงื่อนไข_ผลที่คาด</span><pre>Ship_WhenPending_ChangesStatusToShipped
+Ship_WhenAlreadyShipped_Throws
+Create_WithNoLines_Throws
+Create_WithTotalBelow100_Throws
+Create_WithTotalExactly100_Succeeds
+ApplyDiscount_WhenCustomerIsVip_Takes10PercentOff</pre></div><div><span class="tag bad">ชื่อที่ไม่ช่วยอธิบาย spec</span><pre>Test1
+ShipTest
+TestShipWorks
+Ship_ReturnsTrue
+OrderTests_Ship_Test</pre><p class="one"><strong>โครงสร้าง:</strong> test folder ควรสะท้อน src และชื่อ test class มักคู่กับสิ่งที่กำลังทดสอบ เช่น <code>OrderTests</code>, <code>PlaceOrderHandlerTests</code></p></div></div></section>
+<section id="s4"><h2><span class="no">04</span>หา Test Case อย่างเป็นระบบ</h2><p class="lead">เริ่มจากแบ่ง input เป็นกลุ่มที่ระบบปฏิบัติต่างกัน จากนั้นตรวจขอบของแต่ละกลุ่ม และปิดท้ายด้วย error path</p><div class="canvas cd"><div class="rule">กติกา: <b>Order.Create</b> รับยอดรวม <b>100–50,000</b> บาท และต้องมีอย่างน้อย 1 รายการ</div><div class="btns"><button data-s="0" aria-pressed="true">เริ่ม</button><button data-s="1">1. Partition</button><button data-s="2">2. Boundary</button><button data-s="3">3. Error Path</button></div><div class="axis"><div class="lb top" style="left:0">0</div><div class="lb top" style="left:20%">100</div><div class="lb top" style="left:80%">50,000</div><div class="lb top" style="left:100%">∞</div><div class="zone no" style="left:0;width:20%"></div><div class="zone ok" style="left:20%;width:60%"></div><div class="zone no" style="left:80%;width:20%"></div><div class="ln"></div><div class="pt no" data-s="1" style="left:8%">P1</div><div class="pt ok" data-s="1" style="left:50%">P2</div><div class="pt no" data-s="1" style="left:92%">P3</div><div class="pt no" data-s="2" style="left:18%">99</div><div class="pt ok" data-s="2" style="left:22%">100</div><div class="pt ok" data-s="2" style="left:78%">50k</div><div class="pt no" data-s="2" style="left:82%">+1</div><div class="lb" style="left:20%">ขอบล่าง</div><div class="lb" style="left:80%">ขอบบน</div></div><div class="cases"><div data-s="1"><span class="n">P1</span><span>ต่ำกว่าช่วง เช่น 50</span><span class="v no">Throws</span></div><div data-s="1"><span class="n">P2</span><span>อยู่ในช่วง เช่น 1,500</span><span class="v ok">Succeeds</span></div><div data-s="1"><span class="n">P3</span><span>เกินช่วง เช่น 80,000</span><span class="v no">Throws</span></div><div data-s="2"><span class="n">B1</span><span>99 — ต่ำกว่าขอบหนึ่งหน่วย</span><span class="v no">Throws</span></div><div data-s="2"><span class="n">B2</span><span>100 — ขอบพอดี</span><span class="v ok">Succeeds</span></div><div data-s="2"><span class="n">B3</span><span>50,000 — ขอบพอดี</span><span class="v ok">Succeeds</span></div><div data-s="2"><span class="n">B4</span><span>50,001 — เกินขอบหนึ่งหน่วย</span><span class="v no">Throws</span></div><div data-s="3"><span class="n">E1</span><span>ไม่มีรายการ</span><span class="v no">Throws</span></div><div data-s="3"><span class="n">E2</span><span>lines เป็น null</span><span class="v no">ArgumentNull</span></div><div data-s="3"><span class="n">E3</span><span>quantity = 0 หรือติดลบ</span><span class="v no">Throws</span></div><div data-s="3"><span class="n">E4</span><span>ผิดหลายกติกาพร้อมกัน — ตรวจชนิด/ข้อความที่ต้องการ</span><span class="v no">Throws</span></div></div><div class="cnt" id="cnt">ยังไม่มีเคส — เริ่มจาก Partition</div></div><div class="two" style="margin-top:20px"><table><tbody><tr><td>Partition</td><td>เลือก 1 ตัวแทนต่อกลุ่มที่ระบบให้ผลเหมือนกัน</td></tr><tr><td>Boundary</td><td>ทดสอบค่าที่ขอบและ ±1 เพราะ off-by-one มักเกิดตรงนี้</td></tr><tr><td>Error Path</td><td>null, ว่าง, ติดลบ, ซ้ำ, state ไม่ถูกต้อง, dependency ล้ม และควรตรวจชนิด error</td></tr></tbody></table><pre>[Theory]
+[InlineData(99)]
+[InlineData(50_001)]
+[InlineData(0)]
+public void Create_WithTotalOutsideRange_Throws(decimal total)
+{
+    var act = () => Order.Create(1, LinesTotaling(total));
+    act.Should().Throw<DomainException>();
+}
+
+[Theory]
+[InlineData(100)]
+[InlineData(1_500)]
+[InlineData(50_000)]
+public void Create_WithTotalInRange_Succeeds(decimal total)
+{
+    var order = Order.Create(1, LinesTotaling(total));
+    order.Total.Should().Be(total);
+}</pre></div></section>
+<section id="s5"><h2><span class="no">05</span>Test Doubles — ตัวแทนของ Dependency</h2><p class="lead">Unit test ไม่ควรเรียก DB, network หรือเวลาจริง จึงใช้ dependency ที่ควบคุมได้แทน โดยชื่อเรียกขึ้นกับพฤติกรรมของตัวแทนนั้น</p><div class="dbl"><div><h3>Stub</h3><p>คืนค่าที่กำหนดไว้ ใช้กับ dependency ที่ให้ข้อมูล</p><div class="when">clock.UtcNow → วันที่คงที่, repo.Get → object ที่เตรียมไว้</div></div><div><h3>Mock</h3><p>ตรวจว่า interaction สำคัญถูกเรียกหรือไม่</p><div class="when">emailSender.Send ถูกเรียก 1 ครั้งด้วย recipient ที่ถูกต้อง</div></div><div><h3>Fake</h3><p>implementation จริงแบบง่ายที่ไม่มี I/O</p><div class="when">InMemoryOrderRepository เก็บข้อมูลใน List&lt;Order&gt;</div></div></div><div class="two" style="margin-top:20px"><pre>public class FakeOrderRepository : IOrderRepository
+{
+    public List<Order> Orders { get; } = [];
+
+    public Task<Order?> GetWithLinesAsync(int id, CancellationToken ct)
+        => Task.FromResult(Orders.FirstOrDefault(o => o.Id == id));
+
+    public void Add(Order order) => Orders.Add(order);
+}
+
+public class FakeUnitOfWork : IUnitOfWork
+{
+    public int SaveCount { get; private set; }
+    public Task<int> SaveChangesAsync(CancellationToken ct)
+    {
+        SaveCount++;
+        return Task.FromResult(1);
+    }
+}</pre><pre>[Fact]
+public async Task Handle_WhenPlaced_SendsConfirmationEmail()
+{
+    var repo = new FakeOrderRepository();
+    var uow = new FakeUnitOfWork();
+    var email = Substitute.For<IEmailSender>();
+    var clock = Substitute.For<IClock>();
+    clock.UtcNow.Returns(new DateTime(2026, 9, 11));
+
+    var handler = new PlaceOrderHandler(repo, uow, email, clock);
+    await handler.Handle(command, default);
+
+    repo.Orders.Should().ContainSingle();
+    uow.SaveCount.Should().Be(1);
+    await email.Received(1).SendAsync(
+        Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+}</pre></div><p class="one"><strong>หลักคิด:</strong> Fake เหมาะกับ repository ที่มี behavior ให้ใช้ซ้ำ, Mock เหมาะกับ side effect ที่ส่งออกไป เช่น email/event/payment และ entity/value object ของเราเองควรใช้ของจริง</p></section>
+<section id="s6"><h2><span class="no">06</span>แต่ละ Layer ควร Test อย่างไร</h2><table><thead><tr><th>ชั้น</th><th>เทสอะไร</th><th>เครื่องมือ/ตัวแทน</th><th>ชนิด</th></tr></thead><tbody><tr><td>Domain</td><td>กติกา, state transition, exception</td><td>ของจริง + builder</td><td class="yes">Unit</td></tr><tr><td>Application</td><td>ลำดับ โหลด → domain → save → side effect และ error handling</td><td>Fake repo/UoW + Mock side effect</td><td class="yes">Unit</td></tr><tr><td>Infrastructure</td><td>query, mapping, Include และ behavior กับฐานข้อมูลจริง</td><td>SQL Server ผ่าน Testcontainers</td><td class="warn">Integration</td></tr><tr><td>API</td><td>route, status, validation, auth, JSON shape</td><td>WebApplicationFactory + HttpClient</td><td class="warn">Integration</td></tr><tr><td>Pure Function</td><td>คำนวณ/parse/format</td><td>Theory หลายค่า</td><td class="yes">Unit</td></tr></tbody></table><div class="two" style="margin-top:20px"><pre>// Repository test ใช้ SQL Server จริง
+public class OrderRepositoryTests : IAsyncLifetime
+{
+    private readonly MsSqlContainer _sql = new MsSqlBuilder().Build();
+
+    public async Task InitializeAsync()
+    {
+        await _sql.StartAsync();
+        // สร้าง DbContext จาก connection string
+        // แล้ว MigrateAsync()
+    }
+
+    [Fact]
+    public async Task GetPendingForCustomer_ReturnsOnlyPendingOfThatCustomer()
+    {
+        // seed → Act → Assert
+    }
+}</pre><pre>// Builder ทำให้ Arrange สั้น
+public class OrderBuilder
+{
+    private int _customerId = 1;
+    private List<OrderLine> _lines = [new("SKU-1", 1, 500)];
+
+    public static OrderBuilder Pending() => new();
+    public OrderBuilder ForCustomer(int id)
+    { _customerId = id; return this; }
+
+    public Order Build()
+        => Order.Create(_customerId, _lines);
+}</pre></div><p class="one"><strong>ข้อสำคัญจากโครงนี้:</strong> Repository test มีเป้าหมายตรวจ behavior ที่ขึ้นกับ SQL Server จริง จึงใช้ Testcontainers แทน EF InMemory provider</p></section>
+<section id="s7"><h2><span class="no">07</span>Test Smells — เทสที่เขียนยากกำลังบอกอะไร</h2><table><thead><tr><th>กลิ่น</th><th>สาเหตุที่มักเป็น</th><th>แนวทาง</th></tr></thead><tbody><tr><td>Arrange 20 บรรทัด</td><td>object graph หรือ dependency เยอะ</td><td>ใช้ Builder และพิจารณาแยก class</td></tr><tr><td>ต้อง mock 6 ตัว</td><td>class ทำหลายหน้าที่</td><td>กลับไปดู SRP</td></tr><tr><td>refactor แล้ว test พังทั้งที่ behavior เดิม</td><td>เทส implementation detail</td><td>assert ผลลัพธ์/state สุดท้าย</td></tr><tr><td>DateTime.Now / Guid / Random</td><td>ผลไม่ deterministic</td><td>inject IClock / IIdGenerator แล้ว stub</td></tr><tr><td>test ต้องรันตามลำดับ</td><td>แชร์ mutable/static state</td><td>ทุก test สร้าง state ของตัวเอง</td></tr><tr><td>เปิด private เป็น public เพื่อเทส</td><td>behavior อาจควรเป็น object แยก</td><td>เทสผ่าน public API หรือ extract class</td></tr><tr><td>assert แค่ไม่ throw</td><td>ยังไม่ชัดว่า behavior ที่ต้องการคืออะไร</td><td>ถามว่าถ้า logic ผิด ผลลัพธ์ต่างตรงไหน</td></tr><tr><td>คำนวณ expected ด้วย logic เดียวกับ production</td><td>test อาจผิดเหมือน production</td><td>ใช้ literal ที่คำนวณแยกจาก implementation</td></tr></tbody></table></section>
+<section id="s8"><h2><span class="no">08</span>โครง Project และเครื่องมือ</h2><div class="two"><div class="canvas"><div class="tree">tests/
+├── Shop.Domain.Tests/
+│   ├── Orders/OrderTests.Create.cs
+│   ├── Orders/OrderTests.Ship.cs
+│   └── TestSupport/OrderBuilder.cs
+├── Shop.Application.Tests/
+│   ├── Orders/PlaceOrderHandlerTests.cs
+│   └── Fakes/FakeOrderRepository.cs
+├── Shop.Infrastructure.Tests/
+│   └── Persistence/OrderRepositoryTests.cs
+└── Shop.Api.Tests/
+    └── Orders/OrdersEndpointTests.cs
+
+# dev: เน้น unit ที่เร็ว
+# CI: รันทั้ง unit + integration
+dotnet test</div></div><table><tbody><tr><td>xUnit</td><td><code>[Fact]</code>, <code>[Theory]</code>, fixture/lifecycle สำหรับ .NET tests</td></tr><tr><td>FluentAssertions / Shouldly</td><td>assert ที่อ่านเป็นประโยค; ไฟล์ต้นฉบับระบุว่า FluentAssertions v8+ มีเงื่อนไขเชิงพาณิชย์ และเสนอ Shouldly/AwesomeAssertions เป็นทางเลือก</td></tr><tr><td>NSubstitute</td><td>Mock/Stub ผ่าน <code>Substitute.For&lt;T&gt;()</code>, <code>Returns</code>, <code>Received</code></td></tr><tr><td>Testcontainers</td><td>SQL Server / Redis / RabbitMQ จริงใน container สำหรับ integration tests</td></tr><tr><td>Bogus</td><td>สร้าง test data จำนวนมากหรือข้อมูลสมจริง</td></tr><tr><td>coverlet + ReportGenerator</td><td>ดูส่วนที่ยังไม่มี coverage โดยไม่ใช้ตัวเลข coverage เป็นเป้าหมายหลัก</td></tr></tbody></table></div><p class="one"><strong>เพิ่มเทสในระบบเดิม:</strong> เริ่มจากเขียน test ให้ bug ที่เพิ่งเจอก่อนแก้ จากนั้นให้ feature ใหม่มี domain tests และค่อยย้อนกลับไปเพิ่ม test ในส่วนที่แก้บ่อยหรือเสี่ยงสูง</p></section>
+<section id="s9"><h2>Checklist ก่อน Commit Test</h2><div class="progress" id="prog"></div><div class="check" id="check"><label><input type="checkbox"><span>ชื่อ test อ่านแล้วรู้กติกาโดยไม่ต้องเปิด implementation<small>Naming</small></span></label><label><input type="checkbox"><span>Arrange / Act / Assert ชัดเจน และมี action หลักเดียว<small>AAA</small></span></label><label><input type="checkbox"><span>กติกาครบทั้ง partition, boundary ±1 และ error path<small>Case Design</small></span></label><label><input type="checkbox"><span>ไม่มี if/loop/try ใน test; หลาย input ใช้ Theory<small>Test Structure</small></span></label><label><input type="checkbox"><span>Unit test ไม่แตะ DateTime.Now, Guid, Random, DB หรือ network จริง<small>Determinism</small></span></label><label><input type="checkbox"><span>Assert ที่ผลลัพธ์ ไม่ยึดกับลำดับ method ภายในโดยไม่จำเป็น<small>Behavior</small></span></label><label><input type="checkbox"><span>Expected value ไม่ได้คำนวณด้วย logic เดียวกับ production<small>Independent Oracle</small></span></label><label><input type="checkbox"><span>ถ้าลบ test นี้ มี regression แบบไหนที่จะไม่มีใครจับได้?<small>Value</small></span></label><label><input type="checkbox"><span>เคยเห็น test นี้ fail เมื่อ behavior ผิดจริง<small>Confidence</small></span></label></div></section>
+<div class="summary"><strong>สรุปใจความสำคัญ</strong><p>Unit test ที่ดีคือข้อกำหนดที่รันได้: เลือกทดสอบ behavior และ business rule มากกว่า implementation detail, ออกแบบ case จาก partition + boundary + error path, แยก I/O ออกด้วย fake/stub/mock ตามหน้าที่ และใช้ integration test เมื่อต้องยืนยัน behavior ของฐานข้อมูลหรือ HTTP จริง ถ้า test เขียนยาก ให้ใช้ความยากนั้นเป็นสัญญาณย้อนกลับไปตรวจ design ของ production code</p></div>
+<footer>Tanapot Knowledge · Unit Testing · .NET / xUnit</footer>
+</main><script>
+const btns=[...document.querySelectorAll('.btns button')],pts=[...document.querySelectorAll('.pt')],rows=[...document.querySelectorAll('.cases div')];const msgs=['ยังไม่มีเคส — เริ่มจาก Partition','3 เคส — ตัวแทนของแต่ละกลุ่ม','7 เคส — เพิ่ม boundary และ ±1','11 เคส — เพิ่ม error path ให้กติกาครบ'];function show(s){btns.forEach(b=>b.setAttribute('aria-pressed',b.dataset.s==s));pts.forEach(p=>p.classList.toggle('show',+p.dataset.s<=s));rows.forEach(r=>r.classList.toggle('show',+r.dataset.s<=s));document.getElementById('cnt').textContent=msgs[s]}btns.forEach(b=>b.onclick=()=>show(+b.dataset.s));show(0);
+const boxes=[...document.querySelectorAll('#check input')],prog=document.getElementById('prog');function upd(){const n=boxes.filter(x=>x.checked).length;prog.textContent=`ผ่านแล้ว ${n} / ${boxes.length}`+(n===boxes.length?' — checklist ครบ':'')}boxes.forEach(x=>x.onchange=upd);upd();
+</script></body></html>
