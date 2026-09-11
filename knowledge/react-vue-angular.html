@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="เปรียบเทียบ React, Vue และ Angular ผ่าน component, lifecycle, project setup, ecosystem และแนวทางเลือกใช้">
+<title>React · Vue · Angular | Tanapot Knowledge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2f5;--grid:#1b2a4114;--ink:#1b2a41;--ink2:#4a5a6e;--line:#b9c4d0;--re:#1e8e8a;--vu:#2e7d4f;--an:#c8503a;--hook:#7b4fa0;--hi:#ffd966;--font:'IBM Plex Sans Thai',system-ui,sans-serif;--code:'IBM Plex Mono',monospace}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;line-height:1.7;font-size:17px}.top{position:sticky;top:0;z-index:20;background:#eef2f5ee;border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}.top-inner{max-width:1160px;margin:auto;padding:12px 24px;display:flex;justify-content:space-between}.top a{text-decoration:none;color:var(--ink);font-weight:600}.top .back{font:13px var(--code);color:var(--ink2)}main{max-width:1160px;margin:auto;padding:42px 24px 96px}h1,h2,h3{line-height:1.25;margin:0}h1{font-size:clamp(30px,4.6vw,48px)}h2{font-size:clamp(22px,2.8vw,30px);margin-bottom:7px}.no{font:400 .62em var(--code);color:var(--ink2);margin-right:10px}.lead{font-size:19px;color:var(--ink2);max-width:66ch}section{margin-top:76px}code{font-family:var(--code);font-size:.9em;background:#fff;border:1px solid var(--line);padding:1px 6px;border-radius:4px}pre{font:12.5px/1.55 var(--code);background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:14px;overflow:auto;white-space:pre-wrap}.jump{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.jump a{font-size:14px;text-decoration:none;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:5px 13px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:18px;box-shadow:6px 6px 0 #1b2a411f}.card.re{border-top:8px solid var(--re)}.card.vu{border-top:8px solid var(--vu)}.card.an{border-top:8px solid var(--an)}.card.re h3{color:var(--re)}.card.vu h3{color:var(--vu)}.card.an h3{color:var(--an)}.ver{font:12px var(--code);color:var(--ink2);margin:4px 0 10px}.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14px}.kv dt{color:var(--ink2)}.kv dd{margin:0}.life{display:flex;flex-direction:column;gap:7px;margin-top:12px}.step{border:1.5px solid var(--ink);border-radius:6px;background:#fff;padding:8px 10px;text-align:center;font-size:13px}.hook{border:1.5px dashed var(--hook);color:var(--hook);border-radius:999px;padding:5px 10px;text-align:center;font:12px var(--code)}.loop{border:1.5px dashed var(--line);border-radius:8px;padding:9px;background:#f8fafc}.one{font-size:15px;color:var(--ink2);border-left:3px solid var(--hi);background:#fff;padding:10px 14px;margin-top:16px}.tree,.cmd{font:12px/1.6 var(--code);white-space:pre;overflow:auto;border-radius:6px;padding:11px}.tree{background:#f3f6f9}.cmd{background:var(--ink);color:#fff}table{width:100%;border-collapse:collapse;background:#fff;border:1.5px solid var(--ink);font-size:14.5px}th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{background:#f3f6f9}th.re{color:var(--re)}th.vu{color:var(--vu)}th.an{color:var(--an)}td:first-child{font-weight:600;color:var(--ink2)}.pick{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.pick>div{background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:17px}.pick .re{border-top:6px solid var(--re)}.pick .vu{border-top:6px solid var(--vu)}.pick .an{border-top:6px solid var(--an)}.summary{margin-top:72px;background:var(--ink);color:#fff;border-radius:8px;padding:24px}.summary p{color:#dbe3ec;margin:8px 0 0}footer{margin-top:48px;color:var(--ink2);font-size:14px}@media(max-width:960px){.three,.pick{grid-template-columns:1fr}}@media(max-width:700px){table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{border-bottom:1px solid var(--line)}td{border:0;padding:6px 12px}td:first-child{padding-top:13px}.top-inner{padding:10px 16px}main{padding-left:18px;padding-right:18px}}
+</style></head>
+<body><nav class="top"><div class="top-inner"><a href="../knowledge.html">← รวมสาระ</a><a class="back" href="../index.html">Portfolio</a></div></nav>
+<main><header><div style="font:12px var(--code);color:var(--ink2);letter-spacing:.08em;margin-bottom:10px">FRONTEND · COMPONENT · LIFECYCLE</div><h1>React · Vue · Angular<br>ต่างกันที่ “ให้เราตัดสินใจเองแค่ไหน”</h1><p class="lead">ทั้งสามมีโจทย์เดียวกันคือเอา state ไปวาดเป็น UI แล้วอัปเดตเมื่อ state เปลี่ยน ความต่างอยู่ที่รูปแบบ component, กลไก reactivity, lifecycle และจำนวนเรื่องที่ framework เลือกให้เรา</p><nav class="jump"><a href="#s1">Component</a><a href="#s2">Lifecycle</a><a href="#s3">เริ่มโปรเจกต์</a><a href="#s4">ตารางเทียบ</a><a href="#s5">เลือกใช้</a></nav></header>
+<section id="s1"><h2><span class="no">01</span>Component เดียวกัน เขียน 3 แบบ</h2><p class="lead">ตัวอย่าง Counter เดียวกันช่วยให้เห็นว่าทั้งสามวาง state, template และ logic ต่างกันตรงไหน</p><div class="three"><article class="card re"><h3>React</h3><div class="ver">JSX · function component · Hooks</div><pre>function Counter({ start = 0 }) {
+  const [count, setCount] = useState(start);
+  const over = count &gt; 10;
+
+  return &lt;&gt;
+    &lt;button onClick={() =&gt; setCount(count + 1)}&gt;+1&lt;/button&gt;
+    &lt;p&gt;{count}&lt;/p&gt;
+    {over &amp;&amp; &lt;p&gt;เกิน 10 แล้ว&lt;/p&gt;}
+  &lt;/&gt;
+}</pre><dl class="kv"><dt>state</dt><dd><code>useState</code> เปลี่ยนผ่าน setter</dd><dt>template</dt><dd>JSX ใช้ expression / map / condition ของ JS</dd><dt>update</dt><dd>state เปลี่ยน → function component รันใหม่ → React reconcile ผลลัพธ์</dd></dl></article><article class="card vu"><h3>Vue</h3><div class="ver">SFC · Composition API · template</div><pre>&lt;script setup lang="ts"&gt;
+const props = defineProps&lt;{ start?: number }&gt;()
+const count = ref(props.start ?? 0)
+const over = computed(() =&gt; count.value &gt; 10)
+&lt;/script&gt;
+
+&lt;template&gt;
+ &lt;button @click="count++"&gt;+1&lt;/button&gt;
+ &lt;p&gt;{{ count }}&lt;/p&gt;
+ &lt;p v-if="over"&gt;เกิน 10 แล้ว&lt;/p&gt;
+&lt;/template&gt;</pre><dl class="kv"><dt>state</dt><dd><code>ref</code> / <code>reactive</code></dd><dt>template</dt><dd>HTML + directive เช่น <code>v-if</code>, <code>v-for</code></dd><dt>update</dt><dd>reactive dependency บอก Vue ว่าส่วนไหนต้องอัปเดต</dd></dl></article><article class="card an"><h3>Angular</h3><div class="ver">TypeScript class · decorator · Signals</div><pre>@Component({
+ selector: 'app-counter',
+ template: `
+  &lt;button (click)="inc()"&gt;+1&lt;/button&gt;
+  &lt;p&gt;{{ count() }}&lt;/p&gt;
+  @if (over()) { &lt;p&gt;เกิน 10 แล้ว&lt;/p&gt; }
+ `
+})
+export class CounterComponent {
+ count = signal(0)
+ over = computed(() =&gt; this.count() &gt; 10)
+ inc() { this.count.update(c =&gt; c + 1) }
+}</pre><dl class="kv"><dt>state</dt><dd><code>signal</code> / <code>computed</code></dd><dt>template</dt><dd>HTML + Angular syntax เช่น <code>@if</code>, <code>(click)</code></dd><dt>update</dt><dd>signal ทำให้ framework รู้ dependency ของ UI</dd></dl></article></div><p class="one"><strong>ภาพรวม:</strong> React เปิดพื้นที่ให้ JavaScript มากที่สุด, Vue แยก template กับ logic แบบอ่านง่าย, Angular ให้โครงและ convention ชัดที่สุด</p></section>
+<section id="s2"><h2><span class="no">02</span>Lifecycle — เกิด อยู่ และถูกถอดออก</h2><p class="lead">ทั้งสามมีช่วงเดียวกันคือ Mount → Update → Unmount/Destroy แต่ชื่อ hook และวิธีคิดต่างกัน</p><div class="three"><article class="card re"><h3>React</h3><div class="life"><div class="step">เรียก function component → คำนวณ JSX</div><div class="step">commit DOM</div><div class="hook">useLayoutEffect → paint → useEffect</div><div class="loop"><div class="step">state/props เปลี่ยน</div><div class="step">function component รันใหม่ + reconcile</div><div class="hook">cleanup effect → effect ใหม่เมื่อ deps เปลี่ยน</div></div><div class="hook">unmount → cleanup effects</div></div><pre>useEffect(() =&gt; {
+ const id = setInterval(tick, 1000)
+ return () =&gt; clearInterval(id)
+}, [])</pre></article><article class="card vu"><h3>Vue</h3><div class="life"><div class="step">รัน <code>&lt;script setup&gt;</code> ครั้งเดียว</div><div class="hook">onBeforeMount</div><div class="step">สร้าง DOM</div><div class="hook">onMounted</div><div class="loop"><div class="step">ref/reactive เปลี่ยน</div><div class="hook">onBeforeUpdate</div><div class="step">patch DOM ที่เกี่ยวข้อง</div><div class="hook">onUpdated</div></div><div class="hook">onBeforeUnmount → onUnmounted</div></div><pre>onMounted(() =&gt; start())
+onUnmounted(() =&gt; stop())
+watch(source, value =&gt; { ... })</pre></article><article class="card an"><h3>Angular</h3><div class="life"><div class="step">constructor / dependency injection</div><div class="hook">ngOnChanges → ngOnInit</div><div class="hook">ngAfterContentInit → ngAfterViewInit</div><div class="loop"><div class="step">signal/input เปลี่ยน</div><div class="step">change detection / render</div><div class="hook">effect / afterRender</div></div><div class="hook">ngOnDestroy / DestroyRef</div></div><pre>private ref = inject(DestroyRef)
+ngOnInit() {
+ const id = setInterval(tick, 1000)
+ this.ref.onDestroy(() =&gt; clearInterval(id))
+}</pre></article></div><table style="margin-top:20px"><thead><tr><th>โจทย์</th><th class="re">React</th><th class="vu">Vue</th><th class="an">Angular</th></tr></thead><tbody><tr><td>โหลดตอนเริ่ม</td><td><code>useEffect(..., [])</code></td><td><code>onMounted</code></td><td><code>ngOnInit</code></td></tr><tr><td>ทำเมื่อค่า X เปลี่ยน</td><td><code>useEffect(...,[x])</code></td><td><code>watch(x,...)</code></td><td><code>effect(() =&gt; x())</code></td></tr><tr><td>ค่าคำนวณ</td><td>คำนวณใน render / <code>useMemo</code></td><td><code>computed</code></td><td><code>computed</code></td></tr><tr><td>cleanup</td><td>return function จาก effect</td><td><code>onUnmounted</code></td><td><code>ngOnDestroy</code> / DestroyRef</td></tr></tbody></table></section>
+<section id="s3"><h2><span class="no">03</span>เริ่มโปรเจกต์ — framework เลือกอะไรให้บ้าง</h2><div class="three"><article class="card re"><h3>React</h3><div class="cmd">npm create vite@latest my-app -- --template react-ts
+cd my-app && npm install && npm run dev</div><div class="tree">src/
+├── main.tsx
+├── App.tsx
+├── App.css
+└── index.css</div><p>ฐานเริ่มต้นเล็กมาก Router, data fetching และ global state เลือกเองตาม ecosystem เช่น React Router/TanStack Router, TanStack Query, Zustand หรือใช้ Next.js เป็นฐาน full-stack</p></article><article class="card vu"><h3>Vue</h3><div class="cmd">npm create vue@latest
+✔ TypeScript  ✔ Router  ✔ Pinia
+npm install && npm run dev</div><div class="tree">src/
+├── main.ts
+├── App.vue
+├── router/
+├── stores/
+├── views/
+└── components/</div><p>CLI ให้เลือก official tooling เช่น Vue Router, Pinia, Vitest และ ESLint จึงอยู่กึ่งกลางระหว่าง React ที่เลือกเองมาก กับ Angular ที่ framework เตรียมมาเยอะ</p></article><article class="card an"><h3>Angular</h3><div class="cmd">npm install -g @angular/cli
+ng new my-app
+cd my-app && ng serve</div><div class="tree">src/app/
+├── app.ts
+├── app.html
+├── app.css
+├── app.config.ts
+└── app.routes.ts</div><p>มี Router, HttpClient, Forms, DI, testing และ CLI generation เป็น ecosystem เดียว ทำให้โครงโปรเจกต์ของหลายทีมมีรูปแบบคล้ายกัน</p></article></div><p class="one"><strong>คู่กับ ASP.NET Core:</strong> แนวทางเหมือนกันทั้งสามแบบ — frontend dev server คุยกับ .NET API ผ่าน CORS/proxy และตอน production จะเสิร์ฟ static build ผ่าน ASP.NET หรือ deploy frontend แยกก็ได้</p></section>
+<section id="s4"><h2><span class="no">04</span>เทียบทีละมิติ</h2><table><thead><tr><th>มิติ</th><th class="re">React</th><th class="vu">Vue</th><th class="an">Angular</th></tr></thead><tbody><tr><td>แนวทาง</td><td>UI library + ecosystem</td><td>Progressive framework</td><td>Full framework</td></tr><tr><td>Component</td><td>JSX / function</td><td>SFC + template</td><td>TS class + template</td></tr><tr><td>Reactivity</td><td>state update → render/reconcile</td><td>reactive dependency tracking</td><td>Signals + change detection</td></tr><tr><td>State ระดับแอป</td><td>เลือก Context/Zustand/Redux/Jotai</td><td>Pinia</td><td>Signals + services / NgRx</td></tr><tr><td>Routing</td><td>เลือก library</td><td>Vue Router</td><td>Angular Router</td></tr><tr><td>Dependency Injection</td><td>ไม่มี DI container ใน core</td><td><code>provide/inject</code> แบบเบา</td><td>DI เป็นแกนหลัก</td></tr><tr><td>SSR / Full-stack</td><td>Next.js</td><td>Nuxt</td><td>Angular SSR</td></tr><tr><td>โครงสร้างทีม</td><td>ยืดหยุ่นมาก ต้องตกลง convention เอง</td><td>มีแนวทางกลาง อ่านง่าย</td><td>convention สูง เหมาะกับทีมใหญ่</td></tr></tbody></table></section>
+<section id="s5"><h2><span class="no">05</span>เลือกอะไรดี</h2><div class="pick"><div class="re"><h3>React เมื่อ</h3><ul><li>ต้องการ ecosystem ขนาดใหญ่และอิสระในการเลือก tool</li><li>ใช้ Next.js หรือมีแผนต่อยอด React Native</li><li>ทีมมี convention ที่ชัดและรับภาระการตัดสินใจเองได้</li></ul></div><div class="vu"><h3>Vue เมื่อ</h3><ul><li>ต้องการเรียนรู้ไวและให้ทีมส่งมอบ feature ได้เร็ว</li><li>ชอบ SFC, HTML template และ official tooling เช่น Pinia / Router</li><li>อยากได้ framework ที่มีโครง แต่ไม่หนักเท่า Angular</li></ul></div><div class="an"><h3>Angular เมื่อ</h3><ul><li>แอปองค์กรขนาดใหญ่ หลายทีม และต้องการ convention ร่วม</li><li>ทีมคุ้น TypeScript, DI, service และแนวคิดที่ใกล้ ASP.NET Core</li><li>ต้องการ tooling ครบและ upgrade path เป็นระบบ</li></ul></div></div><p class="one"><strong>สำหรับทีม .NET:</strong> Angular มักรู้สึกคุ้นจาก DI/service, Vue เหมาะเมื่ออยากได้ความเร็วและความเรียบง่าย, React เหมาะเมื่อ ecosystem และความยืดหยุ่นเป็นปัจจัยหลัก</p></section>
+<div class="summary"><strong>สรุปใจความสำคัญ</strong><p>React, Vue และ Angular แก้โจทย์เดียวกัน แต่แบ่งความรับผิดชอบระหว่าง “ทีม” กับ “framework” ต่างกัน React เปิดให้ทีมเลือกสถาปัตยกรรมรอบ UI มากที่สุด, Vue ให้ official path ที่พอดีและอ่านง่าย, Angular ตัดสินใจโครงสร้างและเครื่องมือให้มากที่สุดเพื่อความสม่ำเสมอของโปรเจกต์ขนาดใหญ่</p></div><footer>Tanapot Knowledge · Frontend Frameworks</footer></main></body></html>
