@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Repository Pattern และการออกแบบ Layer สำหรับ .NET REST API: request flow, Unit of Work, Clean Architecture, Vertical Slice และ CQRS">
+<title>Repository Pattern & Layer Architecture | Tanapot Knowledge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef2f5;--grid:#1b2a4114;--ink:#1b2a41;--ink2:#4a5a6e;--line:#b9c4d0;--api:#7b4fa0;--app:#1e6fb8;--dom:#2e7d4f;--inf:#d08a1e;--bad:#c8503a;--good:#2e7d4f;--hi:#ffd966;--font:'IBM Plex Sans Thai',system-ui,sans-serif;--code:'IBM Plex Mono',monospace}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;line-height:1.7;font-size:17px}.top{position:sticky;top:0;z-index:20;background:#eef2f5ee;border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}.top-inner{max-width:1140px;margin:auto;padding:12px 24px;display:flex;justify-content:space-between}.top a{text-decoration:none;color:var(--ink);font-weight:600}.top .back{font:13px var(--code);color:var(--ink2)}main{max-width:1140px;margin:auto;padding:42px 24px 96px}h1,h2,h3{line-height:1.25;margin:0}h1{font-size:clamp(30px,4.6vw,48px)}h2{font-size:clamp(22px,2.8vw,30px);margin-bottom:7px}.no{font:400 .62em var(--code);color:var(--ink2);margin-right:10px}.lead{font-size:19px;color:var(--ink2);max-width:66ch}section{margin-top:76px}code{font-family:var(--code);font-size:.9em;background:#fff;border:1px solid var(--line);padding:1px 6px;border-radius:4px}pre{font:12.5px/1.55 var(--code);background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:14px;overflow:auto;white-space:pre-wrap}.jump{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.jump a{font-size:14px;text-decoration:none;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:5px 13px}.two{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.canvas{background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:20px;box-shadow:6px 6px 0 #1b2a411f}.flow{display:flex;flex-direction:column}.lay{border:2px solid;border-radius:7px;background:#fff;padding:10px 14px;display:grid;grid-template-columns:150px 1fr;gap:12px}.lay b{font:13px var(--code)}.lay small{display:block;color:var(--ink2);font-size:12px}.lay .r{font-size:13.5px;color:var(--ink2)}.lay.api{border-color:var(--api)}.lay.api b{color:var(--api)}.lay.app{border-color:var(--app)}.lay.app b{color:var(--app)}.lay.dom{border-color:var(--dom)}.lay.dom b{color:var(--dom)}.lay.inf{border-color:var(--inf)}.lay.inf b{color:var(--inf)}.lay.db{border-color:var(--ink2);border-style:dashed}.fa{display:flex;justify-content:space-between;height:27px;align-items:center;padding:0 12px;font:11px var(--code);color:var(--ink2)}.one{font-size:15px;color:var(--ink2);border-left:3px solid var(--hi);background:#fff;padding:10px 14px;margin-top:16px}.tag{display:inline-block;font:11px var(--code);padding:2px 8px;border-radius:4px;color:#fff;margin-bottom:7px}.tag.good{background:var(--good)}.tag.bad{background:var(--bad)}table{width:100%;border-collapse:collapse;background:#fff;border:1.5px solid var(--ink);font-size:14.5px}th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{background:#f3f6f9}td:first-child{font-weight:600;color:var(--ink2)}.dep{display:grid;grid-template-columns:1fr 1fr;gap:20px}.stack{display:flex;flex-direction:column;align-items:center}.bx{border:2px solid;border-radius:6px;padding:7px 14px;background:#fff;text-align:center;width:70%;font:12.5px var(--code)}.ar{height:22px;display:flex;align-items:center;color:var(--ink2);font:11px var(--code)}.rings{position:relative;width:100%;max-width:340px;aspect-ratio:1;margin:auto}.ring{position:absolute;border-radius:50%;border:2px solid;display:flex;justify-content:center;align-items:flex-start;padding-top:9px;background:#fff;font:11.5px var(--code)}.r4{inset:0;border-color:var(--api);color:var(--api)}.r3{inset:13%;border-color:var(--inf);color:var(--inf)}.r2{inset:28%;border-color:var(--app);color:var(--app)}.r1{inset:43%;border-color:var(--dom);color:var(--dom);align-items:center;padding:0}.styles{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.st{background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:16px}.fit{font:11.5px var(--code);color:var(--ink2);margin:4px 0 10px}.pm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;font-size:13px}.pm .p{background:#eef8f1;color:var(--good);padding:7px}.pm .m{background:#fff1ee;color:var(--bad);padding:7px}.tree{font:12px/1.65 var(--code);white-space:pre;overflow:auto;background:#f3f6f9;border-radius:6px;padding:11px}.dec{background:#fff;border:1.5px solid var(--ink);border-radius:7px;padding:6px 18px}.dec div{display:grid;grid-template-columns:1fr auto;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}.dec div:last-child{border:0}.to{font:12.5px var(--code);white-space:nowrap;border:1.5px solid var(--ink);border-radius:999px;padding:3px 12px}.summary{margin-top:72px;background:var(--ink);color:#fff;border-radius:8px;padding:24px}.summary p{color:#dbe3ec;margin:8px 0 0}footer{margin-top:48px;color:var(--ink2);font-size:14px}@media(max-width:900px){.two,.dep,.styles{grid-template-columns:1fr}}@media(max-width:700px){.lay{grid-template-columns:1fr}.dec div{grid-template-columns:1fr}.to{white-space:normal}.pm{grid-template-columns:1fr}table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{border-bottom:1px solid var(--line)}td{border:0;padding:6px 12px}td:first-child{padding-top:13px}.top-inner{padding:10px 16px}main{padding-left:18px;padding-right:18px}}
+</style></head>
+<body><nav class="top"><div class="top-inner"><a href="../knowledge.html">← รวมสาระ</a><a class="back" href="../index.html">Portfolio</a></div></nav><main>
+<header><div style="font:12px var(--code);color:var(--ink2);letter-spacing:.08em;margin-bottom:10px">.NET REST API · REPOSITORY · ARCHITECTURE</div><h1>Repository Pattern และการออกแบบ Layer<br>สำหรับ .NET REST API</h1><p class="lead">คำถามหลักคือ request จาก HTTP เดินผ่านอะไรบ้างกว่าจะถึง Database และแต่ละชั้นควร “รู้” อะไรได้บ้าง บทนี้เริ่มจาก Repository Pattern แล้วขยายไปสู่ Layered, Clean Architecture, Vertical Slice และ CQRS</p><nav class="jump"><a href="#s1">Request Flow</a><a href="#s2">Repository</a><a href="#s3">Generic Repo</a><a href="#s4">Unit of Work</a><a href="#s5">Dependency</a><a href="#s6">4 Styles</a><a href="#s7">Project Structure</a><a href="#s8">Decision</a></nav></header>
+<section id="s1"><h2><span class="no">01</span>Request หนึ่งเดินผ่านอะไรบ้าง</h2><p class="lead"><code>POST /api/orders</code> จาก browser จนถึง <code>INSERT</code> ใน SQL Server — แต่ละ layer มีหน้าที่และ boundary ของตัวเอง</p><div class="two"><div class="canvas"><div class="flow"><div class="lay api"><div><b>Presentation</b><small>Controller / Minimal API</small></div><div class="r">รับ HTTP, ตรวจรูปแบบ, map DTO ↔ command, คืน status code</div></div><div class="fa"><span>PlaceOrderCommand ↓</span><span>↑ OrderId / error</span></div><div class="lay app"><div><b>Application</b><small>Service / Handler / Use case</small></div><div class="r">เล่าลำดับ use case: โหลด → ให้ Domain ตัดสิน → บันทึก</div></div><div class="fa"><span>เรียก entity ↓</span><span>↑ result</span></div><div class="lay dom"><div><b>Domain</b><small>Entity / Value Object / Rule</small></div><div class="r">กติกาธุรกิจและ invariant เช่นยอดขั้นต่ำ สถานะ และ stock</div></div><div class="fa"><span>Repository ↓</span><span>↑ entity</span></div><div class="lay inf"><div><b>Infrastructure</b><small>DbContext / Repository impl</small></div><div class="r">EF Core, SQL, external services และ implementation ของ interface</div></div><div class="fa"><span>SQL ↓</span><span>↑ rows</span></div><div class="lay db"><div><b>Database</b><small>SQL Server</small></div><div class="r">persist data, constraint, index</div></div></div></div><pre>// Presentation — บาง
+[HttpPost]
+public async Task&lt;IActionResult&gt; Place(PlaceOrderRequest req, CancellationToken ct)
+{
+    var id = await _placeOrder.Handle(req.ToCommand(), ct);
+    return CreatedAtAction(nameof(Get), new { id }, null);
+}
+
+// Application — ลำดับของ use case
+public async Task&lt;int&gt; Handle(PlaceOrderCommand cmd, CancellationToken ct)
+{
+    var order = Order.Create(cmd.CustomerId, cmd.Lines);
+    orders.Add(order);
+    await uow.SaveChangesAsync(ct);
+    return order.Id;
+}
+
+// Domain — กติกาธุรกิจ
+public static Order Create(int customerId, IReadOnlyList&lt;OrderLine&gt; lines)
+{
+    if (lines.Count == 0) throw new DomainException("ต้องมีสินค้าอย่างน้อย 1 รายการ");
+    if (lines.Sum(l =&gt; l.Total) &lt; 100) throw new DomainException("ยอดขั้นต่ำ 100 บาท");
+    return new Order(customerId, lines);
+}</pre></div><p class="one"><strong>หลักแบ่ง:</strong> Presentation รู้ HTTP, Application รู้ use case, Domain รู้กติกาธุรกิจ, Infrastructure รู้เทคโนโลยีภายนอกและ persistence</p></section>
+<section id="s2"><h2><span class="no">02</span>Repository — ทำให้ DB ดูเหมือน collection ของ object</h2><p class="lead">Application ขอข้อมูลผ่าน interface ที่สื่อความหมายของ domain โดยไม่ต้องรู้ว่า implementation ใช้ EF Core, Dapper หรือ SQL แบบใด</p><div class="two"><div><span class="tag good">Interface</span><pre>public interface IOrderRepository
+{
+    Task&lt;Order?&gt; GetWithLinesAsync(int id, CancellationToken ct);
+    Task&lt;IReadOnlyList&lt;Order&gt;&gt; GetPendingForCustomerAsync(int customerId, CancellationToken ct);
+    Task&lt;bool&gt; HasOpenOrderAsync(int customerId, CancellationToken ct);
+    void Add(Order order);
+    void Remove(Order order);
+}</pre><span class="tag good" style="margin-top:12px">Infrastructure implementation</span><pre>public class OrderRepository(ShopDbContext db) : IOrderRepository
+{
+    public Task&lt;Order?&gt; GetWithLinesAsync(int id, CancellationToken ct) =&gt;
+        db.Orders.Include(o =&gt; o.Lines)
+          .FirstOrDefaultAsync(o =&gt; o.Id == id, ct);
+
+    public void Add(Order order) =&gt; db.Orders.Add(order);
+}</pre></div><table><thead><tr><th>กติกา</th><th>เหตุผล</th></tr></thead><tbody><tr><td>1 repository ต่อ aggregate</td><td>เช่น Order + OrderLine เป็น boundary เดียวกัน</td></tr><tr><td>ชื่อ method บอกเจตนา</td><td><code>GetPendingForCustomer</code> สื่อ use case ดีกว่า generic expression</td></tr><tr><td>ไม่คืน <code>IQueryable</code></td><td>ไม่ปล่อย EF query API รั่วไป Application</td></tr><tr><td>ไม่มี SaveChanges ใน repo</td><td>หนึ่ง use case อาจแตะหลาย aggregate และควร commit ครั้งเดียว</td></tr><tr><td>รับ CancellationToken</td><td>request ยกเลิก → query หยุดตาม</td></tr><tr><td>ไม่มี business rule</td><td>กติกาอยู่ Domain ไม่ใช่ persistence</td></tr></tbody></table></div><p class="one"><strong>เป้าหมาย:</strong> repository ไม่ได้มีไว้ซ่อน EF ทุก feature แต่มีไว้สร้าง persistence boundary ที่มีความหมายและทำให้ use case ไม่ผูกกับ query details</p></section>
+<section id="s3"><h2><span class="no">03</span>กับดัก: Generic Repository ครอบ DbSet</h2><p class="lead">ถ้าห่อ <code>DbSet&lt;T&gt;</code> ด้วย CRUD generic แล้วสุดท้ายคืน <code>IQueryable</code> ให้ชั้นบน abstraction จะไม่ช่วยแยก persistence จริง</p><div class="two"><div><span class="tag bad">ตัวอย่างที่มีปัญหา</span><pre>public interface IRepository&lt;T&gt; where T : class
+{
+    Task&lt;T?&gt; GetByIdAsync(int id);
+    Task&lt;IEnumerable&lt;T&gt;&gt; GetAllAsync();
+    IQueryable&lt;T&gt; Query();
+    Task AddAsync(T entity);
+    void Update(T entity);
+    void Delete(T entity);
+    Task SaveAsync();
+}
+
+var orders = await _repo.Query()
+    .Include(o =&gt; o.Lines)
+    .Where(o =&gt; o.Status == "Pending")
+    .ToListAsync();</pre></div><table><thead><tr><th>ปัญหา</th><th>ผล</th></tr></thead><tbody><tr><td>GetAll</td><td>เปิดทางให้โหลดทั้งตารางแล้วกรองทีหลัง</td></tr><tr><td>Query() คืน IQueryable</td><td>EF รั่วขึ้น service และ query กระจายทั่วระบบ</td></tr><tr><td>Update(entity)</td><td>ชนกับ tracking model ของ EF และอาจ mark field เกินจำเป็น</td></tr><tr><td>Save ในทุก repo</td><td>commit/transaction กระจาย</td></tr><tr><td>generic abstraction</td><td>ปิดความสามารถเฉพาะของ EF เช่น projection, split query, bulk update</td></tr></tbody></table></div><p class="one"><strong>ทางเลือก:</strong> ทำ repository เฉพาะ aggregate เมื่อ boundary มีคุณค่า หรือให้ handler ใช้ DbContext ตรงใน Vertical Slice เมื่อไม่ต้องการ abstraction เพิ่ม</p></section>
+<section id="s4"><h2><span class="no">04</span>Unit of Work — commit ครั้งเดียวต่อ use case</h2><p class="lead">ใน EF Core ตัว <code>DbContext</code> ทำหน้าที่ Unit of Work อยู่แล้ว: track การเปลี่ยนแปลงหลาย entity แล้ว <code>SaveChangesAsync()</code> พร้อมกัน</p><div class="two"><pre>public interface IUnitOfWork
+{
+    Task&lt;int&gt; SaveChangesAsync(CancellationToken ct);
+}
+
+public class ShopDbContext : DbContext, IUnitOfWork { }
+
+services.AddDbContext&lt;ShopDbContext&gt;(...);
+services.AddScoped&lt;IUnitOfWork&gt;(sp =&gt;
+    sp.GetRequiredService&lt;ShopDbContext&gt;());
+services.AddScoped&lt;IOrderRepository, OrderRepository&gt;();
+services.AddScoped&lt;IInventoryRepository, InventoryRepository&gt;();</pre><pre>public async Task Handle(ShipOrderCommand cmd, CancellationToken ct)
+{
+    var order = await orders.GetWithLinesAsync(cmd.OrderId, ct)
+        ?? throw new NotFoundException();
+    var stock = await inventory.GetForSkusAsync(order.Skus, ct);
+
+    order.Ship();
+    stock.Deduct(order.Lines);
+
+    await uow.SaveChangesAsync(ct); // commit เดียว
+}</pre></div><p class="one"><strong>แนวคิด:</strong> หลาย repository ใน request เดียวควรใช้ DbContext scoped instance เดียวกัน เพื่อให้การเปลี่ยนแปลงอยู่ใน transaction boundary เดียวเมื่อเหมาะสม</p></section>
+<section id="s5"><h2><span class="no">05</span>ทิศทาง Dependency — จุดต่างสำคัญของ Layered กับ Clean</h2><p class="lead">จำนวนชั้นอาจเท่ากัน แต่ทิศทาง project reference และตำแหน่งของ interface ทำให้ coupling ต่างกัน</p><div class="dep"><div class="canvas"><h3>Layered / N-tier</h3><div class="stack"><div class="bx" style="border-color:var(--api);color:var(--api)">API</div><div class="ar">↓ reference</div><div class="bx" style="border-color:var(--app);color:var(--app)">Business / Service</div><div class="ar">↓ reference</div><div class="bx" style="border-color:var(--inf);color:var(--inf)">DataAccess / EF</div><div class="ar">↓</div><div class="bx" style="border-color:var(--ink2);color:var(--ink2)">Database</div></div><p>ตรงไปตรงมา แต่ Business มีโอกาสรู้จัก EF/DataAccess โดยตรง ทำให้ business logic ผูกกับ persistence มากขึ้น</p></div><div class="canvas"><h3>Clean / Onion</h3><div class="rings"><div class="ring r4">Presentation</div><div class="ring r3">Infrastructure</div><div class="ring r2">Application</div><div class="ring r1">Domain</div></div><p>Application/Domain ประกาศ contract ส่วน Infrastructure implement ผ่าน Dependency Inversion ทำให้แกนในไม่ต้อง reference framework หรือ storage</p></div></div><p class="one"><strong>ชื่อไม่สำคัญเท่าลูกศร:</strong> จุดสำคัญคือ business rule ไม่ควรถูก framework/persistence เป็นคนกำหนดทิศทาง dependency</p></section>
+<section id="s6"><h2><span class="no">06</span>รูปแบบการแบ่งชั้น 4 แบบที่ใช้กันจริง</h2><p class="lead">แต่ละแบบเหมาะกับความซับซ้อน ขนาดทีม และชนิดของ workload ที่ต่างกัน</p><div class="styles"><article class="st"><h3>1. Layered (N-tier)</h3><div class="fit">Controller → Service → Repository</div><div class="tree">Shop.Api/Controllers
+Shop.Business/Services
+Shop.Data/Entities, Repositories, DbContext</div><div class="pm"><div class="p">เข้าใจง่าย เริ่มเร็ว</div><div class="m">service โตง่ายและ feature หนึ่งแตะหลาย project</div></div><p><strong>เหมาะกับ:</strong> CRUD API เล็ก–กลาง ทีมเดียว กติกาไม่ลึกมาก</p></article><article class="st"><h3>2. Clean Architecture</h3><div class="fit">Domain ← Application ← Infrastructure / Api</div><div class="tree">Shop.Domain/
+Shop.Application/
+Shop.Infrastructure/
+Shop.Api/</div><div class="pm"><div class="p">domain test ได้โดยไม่พึ่ง EF, boundary ชัด</div><div class="m">project/interface/boilerplate เพิ่ม</div></div><p><strong>เหมาะกับ:</strong> domain ซับซ้อน ระบบอายุยาว หลายทีม</p></article><article class="st"><h3>3. Vertical Slice</h3><div class="fit">จัดตาม feature ไม่ใช่ technical layer</div><div class="tree">Features/
+  Orders/
+    PlaceOrder.cs
+    ShipOrder.cs
+    GetOrderById.cs
+  Products/</div><div class="pm"><div class="p">แก้ feature อยู่ใกล้กันและใช้ EF ได้เต็มที่</div><div class="m">code อาจซ้ำข้าม slice และมัก test ผ่าน DB จริง</div></div><p><strong>เหมาะกับ:</strong> API feature เยอะ แต่แต่ละ feature ไม่ลึกมาก ทีมคุ้น EF</p></article><article class="st"><h3>4. CQRS</h3><div class="fit">Command ผ่าน domain · Query เน้น read model</div><div class="tree">Commands/PlaceOrder/
+Queries/GetOrderList/
+Infrastructure/Persistence/
+Infrastructure/ReadModels/</div><div class="pm"><div class="p">write รักษากติกา, read optimize query ได้ตรงโจทย์</div><div class="m">มีสอง model/flow ให้ดูแล</div></div><p><strong>เหมาะกับ:</strong> read เยอะ รายงานซับซ้อน หรือ query กับ write มี requirement ต่างกันมาก</p></article></div><p class="one"><strong>ในทางปฏิบัติ:</strong> สามารถผสมได้ เช่น Clean ฝั่ง write + query ตรงสำหรับ read หรือ Vertical Slice ที่เมื่อ logic ซับซ้อนค่อยย้ายลง Domain</p></section>
+<section id="s7"><h2><span class="no">07</span>โครงไฟล์ตั้งต้น — Clean Architecture ขนาดพอดี</h2><div class="two"><div class="canvas"><div class="tree">Shop.sln
+src/
+├── Shop.Domain/
+│   ├── Orders/Order.cs, OrderLine.cs, OrderStatus.cs
+│   └── Common/DomainException.cs
+├── Shop.Application/
+│   ├── Orders/PlaceOrder/
+│   ├── Orders/ShipOrder/
+│   ├── Orders/GetOrderById/
+│   └── Common/IUnitOfWork.cs, IClock.cs
+├── Shop.Infrastructure/
+│   ├── Persistence/ShopDbContext.cs
+│   ├── Persistence/Configurations/
+│   ├── Persistence/Repositories/
+│   └── Services/
+└── Shop.Api/
+    ├── Controllers/
+    ├── Contracts/
+    ├── Middleware/
+    └── Program.cs
+
+tests/
+├── Shop.Domain.Tests/
+├── Shop.Application.Tests/
+└── Shop.Api.Tests/</div></div><div><pre>// Program.cs — composition root
+builder.Services
+    .AddApplication()
+    .AddInfrastructure(builder.Configuration);
+
+// Infrastructure DI
+services.AddDbContext&lt;ShopDbContext&gt;(o =&gt;
+    o.UseSqlServer(cfg.GetConnectionString("Shop")));
+services.AddScoped&lt;IUnitOfWork&gt;(sp =&gt;
+    sp.GetRequiredService&lt;ShopDbContext&gt;());
+services.AddScoped&lt;IOrderRepository, OrderRepository&gt;();</pre><table style="margin-top:14px"><thead><tr><th>สิ่งนี้</th><th>อยู่ที่</th></tr></thead><tbody><tr><td>HTTP request/response DTO</td><td>Api / Contracts</td></tr><tr><td>Command / Query / result DTO</td><td>Application</td></tr><tr><td>validation รูปแบบ</td><td>Api boundary</td></tr><tr><td>business invariant</td><td>Domain</td></tr><tr><td>EF mapping / index</td><td>Infrastructure</td></tr><tr><td>exception → HTTP status</td><td>Api middleware</td></tr></tbody></table></div></div></section>
+<section id="s8"><h2><span class="no">08</span>เลือกอย่างไร</h2><div class="dec"><div><span>CRUD เป็นหลัก ทีมเล็ก กติกาไม่ซับซ้อน</span><span class="to">Vertical Slice / Layered</span></div><div><span>มีกติกาที่ต้อง test ละเอียดและมี aggregate ชัด</span><span class="to">Clean + Repository เฉพาะ aggregate</span></div><div><span>รายงานและหน้ารายการเยอะ Query ซับซ้อน</span><span class="to">CQRS / Read model</span></div><div><span>หลายทีมอยู่ codebase เดียวกันระยะยาว</span><span class="to">Clean + Modular Monolith</span></div><div><span>ยังไม่แน่ใจว่าจะซับซ้อนแค่ไหน</span><span class="to">เริ่มเบา แล้วเพิ่ม boundary เมื่อมีเหตุผล</span></div></div><p class="one"><strong>สัญญาณว่าต้องเพิ่มชั้น:</strong> business rule ซ้ำหลาย handler, test ทุกอย่างต้องเปิด DB, query หลุดถึง Controller. <strong>สัญญาณว่าชั้นเกิน:</strong> interface แค่ส่งต่อ, implementation เดียวที่ไม่มี boundary value และแต่ละชั้นไม่มี logic ของตัวเอง</p></section>
+<div class="summary"><strong>สรุปใจความสำคัญ</strong><p>Repository, Unit of Work และ Layer Architecture มีไว้จัด dependency และความรับผิดชอบให้ชัด ไม่ใช่เพิ่มจำนวนไฟล์ให้มากที่สุด ถ้ากติกาธุรกิจอยู่ใน Domain, use case อยู่ใน Application, persistence อยู่ Infrastructure และการเปลี่ยน storage หรือ framework ไม่ทำให้ต้องแก้ business rule หลายจุด แสดงว่า boundary ของระบบกำลังทำหน้าที่ได้ดี</p></div><footer>Tanapot Knowledge · .NET Architecture · Repository Pattern</footer></main></body></html>
