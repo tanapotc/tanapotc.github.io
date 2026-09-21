@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legacy Modernization — ยกระบบเว็บอายุ 10 ปีมาเป็นปัจจุบันโดยไม่ต้องหยุดธุรกิจ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF2F5; --grid:rgba(27,42,65,.08);
+    --ink:#1B2A41; --ink-2:#4A5A6E; --line:#B9C4D0;
+    --old:#8A6A4A;   /* ระบบเดิม */
+    --new:#1E6FB8;   /* ระบบใหม่ */
+    --proxy:#7B4FA0; /* ตัวกลาง */
+    --ok:#2E7D4F; --warn:#D08A1E; --bad:#C8503A;
+    --hi:#FFD966; --radius:6px;
+    --font:"IBM Plex Sans Thai",system-ui,sans-serif;
+    --code:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:24px 24px;line-height:1.7;font-size:17px}
+  main{max-width:1160px;margin:0 auto;padding:40px 24px 96px}
+  h1,h2,h3{line-height:1.25;margin:0}
+  h1{font-size:clamp(30px,4.6vw,48px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:clamp(22px,2.8vw,30px);font-weight:700;margin-bottom:6px}
+  h2 .no{font-family:var(--code);font-weight:400;font-size:.6em;color:var(--ink-2);margin-right:10px;vertical-align:middle}
+  h3{font-size:18px;font-weight:600}
+  p{margin:0 0 12px;max-width:64ch}
+  .lead{font-size:19px;color:var(--ink-2);max-width:62ch}
+  section{margin-top:80px}
+  code{font-family:var(--code);font-size:.9em;background:#fff;border:1px solid var(--line);padding:1px 6px;border-radius:4px}
+  pre{font-family:var(--code);font-size:12.5px;line-height:1.55;background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:14px 16px;overflow-x:auto;margin:0;color:var(--ink)}
+  pre .c{color:var(--ink-2);font-style:italic} pre .k{color:var(--proxy);font-weight:500} pre .s{color:var(--ok)}
+  .one{font-size:15px;color:var(--ink-2);border-left:3px solid var(--hi);background:#fff;padding:10px 14px;border-radius:0 var(--radius) var(--radius) 0;margin-top:16px;max-width:none}
+  .one strong{color:var(--ink)}
+  .alert{font-size:15px;border:1.5px solid var(--bad);border-left-width:6px;background:#FFF4F1;padding:12px 16px;border-radius:var(--radius);margin-top:22px}
+  .alert strong{color:var(--bad)}
+  nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  nav a{font-size:14px;text-decoration:none;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:5px 14px}
+  nav a:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  @media (max-width:900px){.two{grid-template-columns:1fr}}
+  .canvas{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:22px;position:relative;box-shadow:6px 6px 0 rgba(27,42,65,.12)}
+  .tag{display:inline-block;font-family:var(--code);font-size:11px;padding:1px 8px;border-radius:4px;color:#fff;margin-bottom:6px}
+  .tag.bad{background:var(--bad)} .tag.good{background:var(--ok)}
+
+  /* 6R cards */
+  .rs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media (max-width:900px){.rs{grid-template-columns:1fr}}
+  .r{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:14px}
+  .r h3{font-size:16px;margin-bottom:2px}
+  .r .m{font-family:var(--code);font-size:11.5px;color:var(--ink-2);margin-bottom:8px}
+  .r p{font-size:13.5px;margin:0 0 6px;color:var(--ink-2)}
+  .r p b{color:var(--ink)}
+  .meter{display:grid;grid-template-columns:70px 1fr;gap:4px 8px;font-size:12px;color:var(--ink-2);margin-top:8px}
+  .meter .bar{height:8px;border-radius:4px;background:#E4E9EF;position:relative;align-self:center}
+  .meter .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+
+  /* strangler sim */
+  .phases{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .phases button{font-family:var(--font);font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+  .phases button[aria-pressed=true]{background:var(--ink);color:#fff}
+  .phases button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+  .stg{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:14px;align-items:center}
+  @media (max-width:760px){.stg{grid-template-columns:1fr}}
+  .zone{border:2px solid;border-radius:8px;padding:12px;background:#fff;position:relative;min-height:230px}
+  .zone.old{border-color:var(--old)} .zone.new{border-color:var(--new)}
+  .zone h4{margin:0 0 8px;font-size:13px;font-family:var(--code);font-weight:500}
+  .zone.old h4{color:var(--old)} .zone.new h4{color:var(--new)}
+  .mod{font-size:12.5px;border:1.5px solid var(--line);border-radius:4px;padding:5px 8px;margin-bottom:6px;transition:opacity .3s,border-color .3s,background .3s;display:flex;justify-content:space-between;gap:6px}
+  .mod small{color:var(--ink-2);font-family:var(--code);font-size:10.5px}
+  .zone.old .mod.gone{opacity:.25;text-decoration:line-through}
+  .zone.new .mod{opacity:.2;border-style:dashed}
+  .zone.new .mod.live{opacity:1;border-style:solid;border-color:var(--new);background:#E6F0FA}
+  .dbx{margin-top:10px;font-family:var(--code);font-size:11.5px;border:1.5px dashed var(--ink-2);border-radius:20px/8px;padding:6px 8px;text-align:center;color:var(--ink-2)}
+  .zone.new .dbx{opacity:.2;transition:opacity .3s}
+  .zone.new .dbx.live{opacity:1;border-color:var(--new);color:var(--new)}
+  .mid{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .client{background:var(--ink);color:#fff;border-radius:999px;padding:6px 16px;font-size:13px}
+  .proxy{border:2px solid var(--proxy);border-radius:var(--radius);padding:8px 12px;text-align:center;font-size:13px;background:#fff;width:100%}
+  .proxy b{display:block;color:var(--proxy);font-family:var(--code);font-weight:500;font-size:12.5px}
+  .split{width:100%;height:26px;display:flex;border-radius:4px;overflow:hidden;border:1.5px solid var(--ink);font-family:var(--code);font-size:11px;color:#fff}
+  .split div{display:flex;align-items:center;justify-content:center;transition:width .35s;white-space:nowrap;overflow:hidden}
+  .split .o{background:var(--old)} .split .n{background:var(--new)}
+  .sync{font-family:var(--code);font-size:11px;color:var(--ink-2);text-align:center;min-height:32px}
+  .pnote{margin-top:14px;font-size:14.5px;background:#FFFBEA;border-left:3px solid var(--hi);padding:10px 14px;border-radius:0 var(--radius) var(--radius) 0;min-height:70px}
+  .pnote b{display:block;margin-bottom:2px}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+  th{background:#F3F6F9;font-weight:600}
+  tr:last-child td{border-bottom:0}
+  td:first-child{font-weight:600;width:22%;color:var(--ink-2)}
+  td code{font-size:12px}
+  .yes{color:var(--ok);font-weight:600} .no{color:var(--bad);font-weight:600} .mid2{color:var(--warn);font-weight:600}
+  @media (max-width:640px){table,thead,tbody,tr,th,td{display:block}thead{display:none}td{border-bottom:0;padding:5px 12px}td:first-child{padding-top:14px;color:var(--ink)}tr{border-bottom:1px solid var(--line);padding-bottom:10px}}
+
+  /* roadmap */
+  .road{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative}
+  @media (max-width:900px){.road{grid-template-columns:1fr}}
+  .step{background:#fff;border:1.5px solid var(--ink);padding:12px 14px;position:relative}
+  .step:not(:last-child){border-right:0}
+  @media (max-width:900px){.step:not(:last-child){border-right:1.5px solid var(--ink);border-bottom:0}}
+  .step .n{font-family:var(--code);font-size:11px;color:var(--ink-2)}
+  .step h3{font-size:15px;margin:2px 0 6px}
+  .step ul{margin:0;padding-left:16px;font-size:13px;color:var(--ink-2)}
+  .step li{margin-bottom:3px}
+  .step .out{margin-top:8px;font-size:12px;border-top:1px dashed var(--line);padding-top:6px}
+  .step .out b{color:var(--ok)}
+
+  /* checklist */
+  .check{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:6px 18px}
+  .check label{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px;cursor:pointer}
+  .check label:last-child{border-bottom:0}
+  .check input{margin-top:6px;accent-color:var(--ok);width:16px;height:16px;flex:none}
+  .check small{display:block;color:var(--ink-2);font-size:13px}
+  footer{margin-top:64px;font-size:14px;color:var(--ink-2)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <h1>Legacy Modernization<br>ยกระบบเว็บอายุ 10 ปีมาเป็นปัจจุบัน โดยไม่ต้องหยุดธุรกิจ</h1>
+    <p class="lead">ชื่อหัวข้อที่ใช้กันในวงการคือ <strong>Application Modernization</strong> หรือ <strong>Legacy Migration</strong> — และวิธีที่ได้ผลที่สุดมีชื่อเฉพาะว่า <strong>Strangler Fig</strong>: สร้างระบบใหม่ขึ้นข้างๆ ระบบเดิม ย้ายงานไปทีละส่วน จนระบบเดิมไม่มีอะไรเหลือให้ทำแล้วค่อยปิด หน้านี้ครอบคลุมทั้ง backend (.NET Framework → .NET 10), frontend, และการแยกฐานข้อมูลใหม่ออกจากของเดิม</p>
+    <nav aria-label="หัวข้อ">
+      <a href="#s1">1 เลือกทาง: 6R</a><a href="#s2">2 สำรวจของเดิม</a><a href="#s3">3 Strangler Fig</a><a href="#s4">4 Backend → .NET 10</a><a href="#s5">5 Frontend</a><a href="#s6">6 แยกฐานข้อมูล</a><a href="#s7">7 Cutover &amp; Rollback</a><a href="#s8">8 Roadmap</a><a href="#s9">Checklist</a>
+    </nav>
+    <div class="alert"><strong>เวอร์ชันเป้าหมาย: .NET 10 ไม่ใช่ .NET 8</strong> — .NET 8 (LTS) และ .NET 9 หมด support พร้อมกันวันที่ 10 พฤศจิกายน 2026 หลังจากนั้นไม่มี security patch อีก ส่วน .NET 10 เป็น LTS ที่ support ถึงพฤศจิกายน 2028 โปรเจกต์ modernization ที่เริ่มตอนนี้จะเสร็จหลังวันที่ .NET 8 หมดอายุแน่นอน จึงควรตั้งเป้าที่ .NET 10 ตั้งแต่วันแรก</div>
+  </header>
+
+  <!-- ================= 1 ================= -->
+  <section id="s1">
+    <h2><span class="no">01</span>เลือกทางก่อน — "6R" ของการ modernize</h2>
+    <p class="lead">ไม่ใช่ทุกส่วนของระบบต้องเขียนใหม่ แต่ละ module เลือกทางของตัวเองได้ ระบบ 10 ปีมักจบที่ผสม 3–4 ทางในโปรเจกต์เดียว</p>
+    <div class="rs">
+      <div class="r"><h3>Retain — เก็บไว้ก่อน</h3><div class="m">ไม่แตะ</div><p>ส่วนที่เสถียร ไม่มีคนแก้ ไม่มีความเสี่ยงด้าน security</p><p><b>เช่น</b> หน้ารายงานเก่าที่ใช้เดือนละครั้ง</p>
+        <div class="meter"><span>ความเสี่ยง</span><div class="bar"><i style="width:10%;background:var(--ok)"></i></div><span>ประโยชน์</span><div class="bar"><i style="width:10%;background:var(--new)"></i></div></div></div>
+      <div class="r"><h3>Retire — ปิดทิ้ง</h3><div class="m">ลบ</div><p>ฟีเจอร์ที่ไม่มีใครใช้แล้ว — ดูจาก log การใช้งานจริง 3–6 เดือน</p><p><b>ผลที่มักเจอ:</b> 20–30% ของระบบเก่าตัดทิ้งได้เลย งานลดลงก่อนเริ่ม</p>
+        <div class="meter"><span>ความเสี่ยง</span><div class="bar"><i style="width:15%;background:var(--ok)"></i></div><span>ประโยชน์</span><div class="bar"><i style="width:45%;background:var(--new)"></i></div></div></div>
+      <div class="r"><h3>Rehost — ย้ายที่อยู่</h3><div class="m">lift &amp; shift</div><p>ย้าย server / ขึ้น cloud / ใส่ container โดยไม่แก้โค้ด</p><p><b>ได้:</b> infra ใหม่ · <b>ไม่ได้:</b> แก้ปัญหาโค้ด</p>
+        <div class="meter"><span>ความเสี่ยง</span><div class="bar"><i style="width:25%;background:var(--warn)"></i></div><span>ประโยชน์</span><div class="bar"><i style="width:25%;background:var(--new)"></i></div></div></div>
+      <div class="r"><h3>Replatform — เปลี่ยนฐาน</h3><div class="m">upgrade in place</div><p>.NET Framework → .NET 10, EF6 → EF Core โดยโครงสร้างเดิมเกือบทั้งหมด</p><p><b>เหมาะ:</b> ASP.NET MVC / Web API ที่แยกชั้นดีอยู่แล้ว</p>
+        <div class="meter"><span>ความเสี่ยง</span><div class="bar"><i style="width:45%;background:var(--warn)"></i></div><span>ประโยชน์</span><div class="bar"><i style="width:60%;background:var(--new)"></i></div></div></div>
+      <div class="r"><h3>Refactor / Re-architect</h3><div class="m">strangler fig</div><p>สร้างใหม่ทีละ module ตามโครงใหม่ (Clean, API-first) ข้างระบบเดิม ย้าย traffic ทีละส่วน</p><p><b>เหมาะ:</b> WebForms, logic ปนใน code-behind, DB ที่ต้องปรับโครง</p>
+        <div class="meter"><span>ความเสี่ยง</span><div class="bar"><i style="width:40%;background:var(--warn)"></i></div><span>ประโยชน์</span><div class="bar"><i style="width:90%;background:var(--new)"></i></div></div></div>
+      <div class="r"><h3>Rebuild / Replace</h3><div class="m">big bang · หรือซื้อ SaaS</div><p>เขียนใหม่ทั้งหมดแล้วสลับวันเดียว หรือเลิกเขียนเองแล้วใช้ของสำเร็จรูป</p><p><b>อันตราย:</b> ระบบเก่ายังต้องแก้ระหว่างทาง ของใหม่ไล่ไม่ทัน สลับวันเดียวถ้าพังไม่มีทางถอย</p>
+        <div class="meter"><span>ความเสี่ยง</span><div class="bar"><i style="width:90%;background:var(--bad)"></i></div><span>ประโยชน์</span><div class="bar"><i style="width:80%;background:var(--new)"></i></div></div></div>
+    </div>
+    <p class="one"><strong>ทำไม big-bang rewrite ถึงล้มบ่อย:</strong> ระบบ 10 ปีมีกติกาธุรกิจซ่อนอยู่ในโค้ดที่ไม่มีใครจำได้ว่าทำไม — ของใหม่จะพลาดมันไปจนวันที่ผู้ใช้เจอ และระหว่างเขียนใหม่ 1–2 ปี ธุรกิจยังขอฟีเจอร์ใหม่ในระบบเก่าอยู่ ของใหม่จึงไล่ตามเป้าที่ขยับตลอด Strangler Fig แก้ทั้งสองเรื่องด้วยการส่งมอบทีละชิ้นและเทียบผลกับของเดิมได้ทุกชิ้น</p>
+  </section>
+
+  <!-- ================= 2 ================= -->
+  <section id="s2">
+    <h2><span class="no">02</span>สำรวจของเดิมก่อนแตะอะไร</h2>
+    <p class="lead">สัปดาห์แรกไม่เขียนโค้ดใหม่ แต่ทำแผนที่ของเดิม — สิ่งที่ไม่รู้คือสิ่งที่จะทำให้โปรเจกต์เลื่อน</p>
+    <div class="two">
+      <div>
+        <table>
+          <thead><tr><th>สำรวจอะไร</th><th>หาอย่างไร / ได้อะไร</th></tr></thead>
+          <tbody>
+            <tr><td>Inventory ของหน้า / API</td><td>ไล่ route ทั้งหมด + IIS log 3–6 เดือน → รู้ว่าหน้าไหนใช้บ่อย หน้าไหนไม่มีใครเข้า (Retire)</td></tr>
+            <tr><td>เทคโนโลยีที่ใช้</td><td>WebForms? MVC5? WCF? ASMX? EF6? ADO.NET ตรง? Crystal Reports? — แต่ละตัวมีเส้นทางย้ายต่างกัน (หัวข้อ 4)</td></tr>
+            <tr><td>Dependency ภายนอก</td><td>NuGet ที่ไม่มีเวอร์ชัน .NET Core, DLL ของ vendor, COM, <code>System.Web</code> ในชั้นธุรกิจ — ตัวที่ไม่มีทางไปคือตัวที่ต้องแทนก่อน</td></tr>
+            <tr><td>กติกาธุรกิจที่ซ่อน</td><td>stored procedure, trigger, logic ใน code-behind, job ใน SQL Agent, สูตรใน Excel ที่ import เข้า — จดเป็นรายการพร้อมเจ้าของ</td></tr>
+            <tr><td>Integration</td><td>ระบบอื่นที่เรียกเข้ามา (ใครใช้ API ไหน), file drop, email, FTP — ย้ายแล้วต้องไม่พังพวกนี้</td></tr>
+            <tr><td>Test ที่มี</td><td>มักเกือบศูนย์ → ต้องสร้าง <strong>characterization test</strong> ก่อน: บันทึกผลของระบบเดิมจริงเป็นค่าคาดหวัง (ดูหัวข้อ 7)</td></tr>
+            <tr><td>ข้อมูล</td><td>ขนาดแต่ละตาราง, คุณภาพข้อมูล (null ที่ไม่ควร null, รหัสซ้ำ, encoding ภาษาไทย TIS-620 ปน UTF-8), ตารางที่ไม่มีใครใช้</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+<pre><span class="c"># เครื่องมือช่วยสำรวจ</span>
+
+<span class="c"># 1) วิเคราะห์ว่าโค้ดเดิมใช้ API ไหนที่ไม่มีใน .NET 10</span>
+dotnet tool install -g upgrade-assistant
+upgrade-assistant analyze ./LegacyShop.sln
+
+<span class="c"># 2) หน้าไหนมีคนใช้จริง — IIS log → นับตาม path</span>
+LogParser "SELECT cs-uri-stem, COUNT(*) AS hits
+           FROM u_ex*.log GROUP BY cs-uri-stem
+           ORDER BY hits DESC"
+
+<span class="c"># 3) ตาราง / proc ไหนถูกใช้ — SQL Server</span>
+SELECT OBJECT_NAME(object_id) AS name,
+       last_user_seek, last_user_scan, last_user_update
+FROM sys.dm_db_index_usage_stats
+WHERE database_id = DB_ID();
+
+SELECT OBJECT_NAME(object_id) AS proc_name,
+       execution_count, last_execution_time
+FROM sys.dm_exec_procedure_stats
+ORDER BY execution_count DESC;</pre>
+        <p class="one" style="margin-top:12px"><strong>ผลลัพธ์ของขั้นนี้:</strong> ตาราง module ทั้งหมด × (ทางที่เลือกใน 6R, ความเสี่ยง, ความถี่การใช้, dependency) — ใช้จัดลำดับว่าย้ายอะไรก่อน</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3 ================= -->
+  <section id="s3">
+    <h2><span class="no">03</span>Strangler Fig — ย้ายทีละส่วนผ่านตัวกลาง</h2>
+    <p class="lead">ผู้ใช้เข้าที่ URL เดิมเสมอ ตัวกลาง (reverse proxy) ตัดสินว่า request ไหนไประบบเดิม request ไหนไประบบใหม่ ย้ายเสร็จหนึ่ง module ก็แค่เปลี่ยนกฎที่ตัวกลาง กดดูแต่ละระยะ</p>
+    <div class="canvas">
+      <div class="phases" role="group" aria-label="ระยะการย้าย">
+        <button type="button" data-p="0" aria-pressed="true">ระยะ 0: ตั้งตัวกลาง</button>
+        <button type="button" data-p="1" aria-pressed="false">ระยะ 1: module แรก</button>
+        <button type="button" data-p="2" aria-pressed="false">ระยะ 2: ครึ่งทาง</button>
+        <button type="button" data-p="3" aria-pressed="false">ระยะ 3: เกือบหมด</button>
+        <button type="button" data-p="4" aria-pressed="false">ระยะ 4: ปิดระบบเดิม</button>
+      </div>
+      <div class="stg">
+        <div class="zone old" id="zold">
+          <h4>ระบบเดิม · .NET Framework 4.x</h4>
+          <div class="mod" data-m="report">รายงาน <small>WebForms</small></div>
+          <div class="mod" data-m="master">ข้อมูลหลัก <small>WebForms</small></div>
+          <div class="mod" data-m="order">คำสั่งซื้อ <small>MVC5</small></div>
+          <div class="mod" data-m="approve">อนุมัติ <small>MVC5 + SP</small></div>
+          <div class="mod" data-m="auth">login / สิทธิ์ <small>Membership</small></div>
+          <div class="dbx" id="olddb">LegacyDB (SQL Server 2014)</div>
+        </div>
+        <div class="mid">
+          <div class="client">ผู้ใช้ · URL เดิม</div>
+          <div style="color:var(--ink-2)">↓</div>
+          <div class="proxy"><b>Reverse proxy (YARP)</b>กฎ routing ต่อ path</div>
+          <div class="split" id="split"><div class="o" id="so"></div><div class="n" id="sn"></div></div>
+          <div class="sync" id="sync"></div>
+        </div>
+        <div class="zone new" id="znew">
+          <h4>ระบบใหม่ · .NET 10 + SPA</h4>
+          <div class="mod" data-m="auth">login / สิทธิ์ <small>Identity / OIDC</small></div>
+          <div class="mod" data-m="order">คำสั่งซื้อ <small>API + React/Vue</small></div>
+          <div class="mod" data-m="approve">อนุมัติ <small>API + workflow</small></div>
+          <div class="mod" data-m="master">ข้อมูลหลัก <small>API + SPA</small></div>
+          <div class="mod" data-m="report">รายงาน <small>read model</small></div>
+          <div class="dbx" id="newdb">ShopDB ใหม่ (SQL Server 2022+)</div>
+        </div>
+      </div>
+      <div class="pnote" id="pnote"></div>
+    </div>
+    <div class="two" style="margin-top:18px">
+      <div>
+<pre><span class="c">// Program.cs ของ proxy — YARP (Yarp.ReverseProxy)</span>
+<span class="c">// appsettings.json กำหนดกฎ: path ไหนไปฝั่งไหน</span>
+{
+  <span class="s">"ReverseProxy"</span>: {
+    <span class="s">"Routes"</span>: {
+      <span class="s">"orders-new"</span>:  { <span class="s">"ClusterId"</span>: <span class="s">"modern"</span>, <span class="s">"Order"</span>: 1,
+                       <span class="s">"Match"</span>: { <span class="s">"Path"</span>: <span class="s">"/orders/{**rest}"</span> } },
+      <span class="s">"api-new"</span>:     { <span class="s">"ClusterId"</span>: <span class="s">"modern"</span>, <span class="s">"Order"</span>: 1,
+                       <span class="s">"Match"</span>: { <span class="s">"Path"</span>: <span class="s">"/api/v2/{**rest}"</span> } },
+      <span class="s">"everything-else"</span>: { <span class="s">"ClusterId"</span>: <span class="s">"legacy"</span>, <span class="s">"Order"</span>: 1000,
+                       <span class="s">"Match"</span>: { <span class="s">"Path"</span>: <span class="s">"{**catch-all}"</span> } }
+    },
+    <span class="s">"Clusters"</span>: {
+      <span class="s">"modern"</span>: { <span class="s">"Destinations"</span>: { <span class="s">"a"</span>: { <span class="s">"Address"</span>: <span class="s">"https://app-new:8443/"</span> } } },
+      <span class="s">"legacy"</span>: { <span class="s">"Destinations"</span>: { <span class="s">"a"</span>: { <span class="s">"Address"</span>: <span class="s">"https://iis-old/"</span> } } }
+    }
+  }
+}</pre>
+      </div>
+      <div>
+        <table>
+          <thead><tr><th>คำถาม</th><th>แนวทาง</th></tr></thead>
+          <tbody>
+            <tr><td>ย้ายอะไรก่อน</td><td>module ที่ <em>คุณค่าสูง + dependency น้อย</em> และมีคนใช้พอที่จะพิสูจน์ได้ว่าทำงาน — ไม่ใช่ตัวที่ง่ายที่สุด (พิสูจน์อะไรไม่ได้) และไม่ใช่ตัวที่ยากที่สุด</td></tr>
+            <tr><td>login ข้ามสองระบบ</td><td>ย้าย auth ไปที่ใหม่เป็นอย่างแรกๆ (OIDC / Identity) แล้วให้ระบบเดิมอ่าน cookie / token เดียวกัน หรือใช้ <code>Microsoft.AspNetCore.SystemWebAdapters</code> แชร์ session/auth ระหว่างสองฝั่งช่วงเปลี่ยนผ่าน</td></tr>
+            <tr><td>ของหน้าตาต่างกัน</td><td>ใส่ layout/header เดียวกันทั้งสองฝั่งช่วงเปลี่ยนผ่าน ผู้ใช้ไม่ควรรู้ว่าข้ามระบบ</td></tr>
+            <tr><td>ถอยกลับ</td><td>แก้กฎที่ proxy กลับไปฝั่งเดิม — ย้อนได้ในไม่กี่นาทีตราบใดที่ข้อมูลยัง sync อยู่ (หัวข้อ 6, 7)</td></tr>
+            <tr><td>ระบบเดิมยังต้องแก้</td><td>ห้ามเพิ่มฟีเจอร์ใหม่ใน module ที่กำลังย้าย (feature freeze เฉพาะ module) ฟีเจอร์ใหม่ไปลงฝั่งใหม่เท่านั้น</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4 ================= -->
+  <section id="s4">
+    <h2><span class="no">04</span>Backend — .NET Framework 4.x → .NET 10</h2>
+    <p class="lead">ภาษา C# และ logic ส่วนใหญ่ยกมาได้ สิ่งที่เปลี่ยนจริงคือชั้นที่ผูกกับ IIS / <code>System.Web</code> — ตารางนี้บอกว่าของเดิมแต่ละตัวไปอยู่ที่ไหน</p>
+    <table>
+      <thead><tr><th>ของเดิม (.NET Framework)</th><th>ปลายทาง (.NET 10)</th><th>ความยาก / หมายเหตุ</th></tr></thead>
+      <tbody>
+        <tr><td>ASP.NET Web Forms (<code>.aspx</code>, ViewState, code-behind)</td><td>Razor Pages / Blazor หรือ API + SPA</td><td class="no">เขียนใหม่ — ไม่มีทางย้ายตรง ดึง logic ออกจาก code-behind ไปเป็น service ก่อน แล้ว UI ค่อยสร้างใหม่</td></tr>
+        <tr><td>ASP.NET MVC 5</td><td>ASP.NET Core MVC</td><td class="mid2">ปานกลาง — controller/view ยกได้ ต้องแก้ filter, HtmlHelper บางตัว, bundling, DI</td></tr>
+        <tr><td>ASP.NET Web API 2</td><td>ASP.NET Core Web API / Minimal API</td><td class="yes">ง่าย — แนวคิดเดิม เปลี่ยน attribute และ pipeline</td></tr>
+        <tr><td>WCF service</td><td>gRPC หรือ REST · หรือ CoreWCF ถ้า client เปลี่ยนไม่ได้</td><td class="mid2">ขึ้นกับว่าใครเรียก — client ภายนอกที่ใช้ SOAP อยู่ ใช้ CoreWCF ต่อไปก่อน</td></tr>
+        <tr><td>ASMX web service</td><td>Web API / CoreWCF (basicHttp)</td><td class="mid2">ส่วนใหญ่มี client เก่าที่แก้ไม่ได้ — เก็บ contract เดิมไว้</td></tr>
+        <tr><td>Entity Framework 6 / EDMX</td><td>EF Core 10</td><td class="mid2">EDMX ไม่มีแล้ว → reverse-engineer เป็น code-first (<code>dotnet ef dbcontext scaffold</code>) · lazy loading, <code>ObjectContext</code> ต้องแก้</td></tr>
+        <tr><td>ADO.NET / DataSet / stored proc</td><td>Dapper หรือ EF Core <code>FromSql</code> / <code>SqlQuery</code></td><td class="yes">ใช้ต่อได้ — ค่อยๆ ย้าย logic ออกจาก proc เมื่อเข้า module นั้น</td></tr>
+        <tr><td><code>Web.config</code></td><td><code>appsettings.json</code> + environment + Key Vault</td><td class="yes">ง่าย แต่ย้าย secret ออกจากไฟล์ด้วย (ดูหน้า app-security)</td></tr>
+        <tr><td><code>Global.asax</code>, HttpModule, HttpHandler</td><td>middleware ใน <code>Program.cs</code></td><td class="mid2">ปานกลาง — ลำดับ middleware สำคัญ</td></tr>
+        <tr><td>Membership / SimpleMembership / Forms auth</td><td>ASP.NET Core Identity หรือ OIDC (Entra ID, Keycloak)</td><td class="mid2">ย้าย hash รหัสผ่านเดิม: rehash ตอนผู้ใช้ login ครั้งถัดไป ไม่บังคับรีเซ็ตทุกคน</td></tr>
+        <tr><td><code>Session</code> ใน process, <code>HttpContext.Current</code></td><td>Distributed cache (Redis) · inject <code>IHttpContextAccessor</code> เท่าที่จำเป็น</td><td class="mid2">static <code>HttpContext.Current</code> ในชั้นธุรกิจต้องถอดออก — จุดที่กินเวลาที่สุดในโค้ดเก่า</td></tr>
+        <tr><td>Windows Service, SQL Agent job, Task Scheduler</td><td><code>BackgroundService</code> / Hangfire / Quartz.NET</td><td class="yes">รวม job ไว้ในที่ที่ deploy และ monitor ได้</td></tr>
+        <tr><td>Crystal Reports / RDLC</td><td>SSRS, QuestPDF, หรือ report service แยก</td><td class="no">มักเป็นตัวที่ติดสุด — วางแผนแยก</td></tr>
+        <tr><td>IIS บน Windows Server</td><td>Kestrel ใน container (Linux) หรือ IIS + ASP.NET Core Module</td><td class="yes">ไม่ต้องย้ายไป Linux ถ้ายังไม่พร้อม — .NET 10 รันบน IIS ได้</td></tr>
+      </tbody>
+    </table>
+    <div class="two" style="margin-top:20px">
+      <div>
+        <h3>ลำดับการ upgrade โค้ดที่ยกมาได้</h3>
+        <table style="margin-top:10px">
+          <tbody>
+            <tr><td>1. แยก class library</td><td>ดึง logic ที่ไม่แตะ <code>System.Web</code> ออกเป็น project แยก แล้ว multi-target <code>net48;net10.0</code> — ใช้ร่วมกันทั้งสองระบบได้ระหว่างเปลี่ยนผ่าน</td></tr>
+            <tr><td>2. SDK-style project</td><td>แปลง <code>.csproj</code> แบบเก่าเป็น SDK-style, <code>packages.config</code> → <code>PackageReference</code></td></tr>
+            <tr><td>3. ไล่ dependency</td><td>NuGet ทุกตัวต้องมีเวอร์ชันที่รองรับ .NET 10 ตัวที่ไม่มี → หาแทนก่อน</td></tr>
+            <tr><td>4. web project ใหม่</td><td>สร้าง ASP.NET Core project ใหม่ (ไม่แปลงของเดิม) แล้ว reference library จากข้อ 1</td></tr>
+            <tr><td>5. โครงใหม่</td><td>จัดตาม Clean / Vertical Slice (ดูหน้า layer-architecture) — ไม่ยกความยุ่งเดิมมาทั้งก้อน</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+<pre><span class="c">&lt;!-- Legacy.Domain.csproj — ใช้ได้ทั้งระบบเดิมและใหม่ช่วงเปลี่ยนผ่าน --&gt;</span>
+&lt;Project Sdk=<span class="s">"Microsoft.NET.Sdk"</span>&gt;
+  &lt;PropertyGroup&gt;
+    &lt;TargetFrameworks&gt;net48;net10.0&lt;/TargetFrameworks&gt;
+    &lt;LangVersion&gt;latest&lt;/LangVersion&gt;
+    &lt;Nullable&gt;enable&lt;/Nullable&gt;
+  &lt;/PropertyGroup&gt;
+  &lt;ItemGroup Condition=<span class="s">"'$(TargetFramework)' == 'net48'"</span>&gt;
+    &lt;Reference Include=<span class="s">"System.Configuration"</span> /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+
+<span class="c">// โค้ดที่ต้องต่างกันเล็กน้อยระหว่างสองฝั่ง</span>
+<span class="k">#if</span> NET48
+    <span class="k">var</span> cs = ConfigurationManager.ConnectionStrings[<span class="s">"Shop"</span>].ConnectionString;
+<span class="k">#else</span>
+    <span class="k">var</span> cs = _config.GetConnectionString(<span class="s">"Shop"</span>);
+<span class="k">#endif</span></pre>
+        <p class="one" style="margin-top:12px"><strong>จุดที่ประหยัดเวลาได้มาก:</strong> library ที่ multi-target แล้ว ระบบเดิมใช้ต่อได้ทันที — แก้ bug ที่เดียว ได้ทั้งสองระบบ และเป็นทางที่ logic ย้ายข้ามมาโดยไม่ต้องเขียนใหม่</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 5 ================= -->
+  <section id="s5">
+    <h2><span class="no">05</span>Frontend — จาก WebForms / jQuery สู่ UI ปัจจุบัน</h2>
+    <p class="lead">การย้ายที่ใหญ่ที่สุดไม่ใช่เปลี่ยน framework แต่คือเปลี่ยนจาก "server สร้าง HTML พร้อมข้อมูล" เป็น "UI เรียก API" — ต้องมี API ก่อน frontend ใหม่ถึงจะเกิดได้</p>
+    <div class="two">
+      <div>
+        <table>
+          <thead><tr><th>ทาง</th><th>เหมาะเมื่อ</th></tr></thead>
+          <tbody>
+            <tr><td>Razor Pages / MVC ใหม่ (server-rendered)</td><td>ทีมเป็น .NET ล้วน, หน้าเป็นฟอร์ม/ตารางเป็นหลัก, ไม่ต้องการ interactivity มาก — ย้ายเร็วที่สุด เพิ่ม htmx เมื่อต้องการ interactive บางส่วน</td></tr>
+            <tr><td>Blazor (Server / WebAssembly / Auto)</td><td>ทีม .NET อยาก interactive โดยไม่เขียน JS, แชร์ model C# ระหว่าง UI กับ API — ระวังขนาดดาวน์โหลดของ WASM และ connection ของ Server</td></tr>
+            <tr><td>SPA: React / Vue / Angular + API</td><td>UI ซับซ้อน, มีทีม frontend แยก, จะมี mobile app ใช้ API เดียวกัน (ดูหน้า react-vue-angular)</td></tr>
+            <tr><td>ฝังทีละส่วน (islands)</td><td>ยังย้ายทั้งหน้าไม่ได้ — ฝัง component ของ Vue/React ลงในหน้าเดิม (<code>&lt;div id="order-grid"&gt;</code>) เพื่อทดลองและค่อยๆ ขยาย</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <table>
+          <thead><tr><th>ประเด็น</th><th>แนวทาง</th></tr></thead>
+          <tbody>
+            <tr><td>API ก่อน UI</td><td>ออกแบบ API ใหม่ตาม use case (<code>/api/v2/orders</code>) ไม่ใช่ห่อ stored proc เดิมเป็น endpoint ทีละตัว — มี OpenAPI spec ให้ frontend generate client</td></tr>
+            <tr><td>BFF (Backend for Frontend)</td><td>ถ้า UI ต้องรวมข้อมูลจากทั้งระบบเก่าและใหม่ ให้ BFF รวมให้ UI เห็น API เดียว — UI ไม่ต้องรู้ว่าข้อมูลอยู่ฝั่งไหน</td></tr>
+            <tr><td>Design system</td><td>สร้างชุด component กลาง (ปุ่ม, ฟอร์ม, ตาราง) ก่อนหน้าแรก — ทุกหน้าที่ย้ายมาหน้าตาเหมือนกันทันที (ดูหน้า ux-ui-controls)</td></tr>
+            <tr><td>URL เดิม</td><td>รักษา URL ที่ผู้ใช้ bookmark / ระบบอื่นลิงก์เข้ามา หรือทำ redirect 301 ทุกตัว</td></tr>
+            <tr><td>เบราว์เซอร์ / อุปกรณ์</td><td>ระบบ 10 ปีมักรองรับ IE — ตกลงกับผู้ใช้ให้ชัดว่าเลิกรองรับ และเพิ่ม responsive สำหรับมือถือไปพร้อมกัน</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 6 ================= -->
+  <section id="s6">
+    <h2><span class="no">06</span>แยกฐานข้อมูลใหม่ออกจากของเดิม</h2>
+    <p class="lead">ส่วนที่ยากที่สุด เพราะโค้ดย้ายทีละ module ได้ แต่ข้อมูลเป็นก้อนเดียวที่ทุก module แชร์ ระหว่างเปลี่ยนผ่านต้องตอบให้ได้ว่า <em>ใครเป็นเจ้าของข้อมูลแต่ละตาราง</em> และ <em>อีกฝั่งเห็นข้อมูลนั้นได้อย่างไร</em></p>
+    <table>
+      <thead><tr><th>ทาง</th><th>ทำอย่างไร</th><th>ข้อดี</th><th>ข้อควรระวัง</th></tr></thead>
+      <tbody>
+        <tr><td>A. ใช้ DB เดิมร่วมกันก่อน</td><td>ระบบใหม่ต่อ LegacyDB ตรงๆ อ่าน/เขียนตารางเดิม</td><td class="yes">เร็วที่สุด ไม่มีปัญหา sync</td><td>ยังติดโครงเดิม — เป็นแค่จุดเริ่ม ใช้ร่วมกับ expand-contract เพื่อค่อยๆ ปรับ schema</td></tr>
+        <tr><td>B. DB ใหม่ + sync ด้วย CDC</td><td>SQL Server Change Data Capture / Change Tracking หรือ Debezium อ่าน log ของ DB เดิมแล้วเขียนเข้า DB ใหม่</td><td class="yes">ระบบเดิมไม่ต้องแก้โค้ด ข้อมูลตามมาเกือบ real-time</td><td>ทิศเดียว (เดิม → ใหม่) — ต้องมีตัวแปลง schema (anti-corruption layer) ตรงกลาง</td></tr>
+        <tr><td>C. Outbox event</td><td>ฝั่งที่เป็นเจ้าของเขียน event ลงตาราง outbox ใน transaction เดียวกับข้อมูล worker อ่านแล้วส่งให้อีกฝั่ง</td><td class="yes">ถูกต้องแม้ระบบล่ม, ใช้ได้สองทิศ</td><td>ต้องแก้โค้ดฝั่งที่เขียน — เหมาะเมื่อ module นั้นย้ายมาฝั่งใหม่แล้ว และต้องส่งกลับให้ระบบเดิมที่ยังอ่านอยู่</td></tr>
+        <tr><td>D. ETL batch</td><td>job คืนละครั้งดึงจากเดิมเข้าใหม่</td><td class="yes">ง่าย เหมาะกับรายงาน / ข้อมูลอ้างอิง</td><td>ข้อมูลช้าไปหนึ่งรอบ ไม่เหมาะกับข้อมูลที่ใช้ทำงานสด</td></tr>
+        <tr><td>✕ Dual write</td><td>แอปเขียนทั้งสอง DB เอง</td><td class="no">ดูง่าย</td><td class="no">ห้ามทำ — เขียนสำเร็จที่หนึ่งแต่ล้มอีกที่ ข้อมูลเพี้ยนเงียบๆ โดยไม่มีใครรู้</td></tr>
+      </tbody>
+    </table>
+    <div class="two" style="margin-top:20px">
+      <div class="canvas" style="padding:18px">
+        <h3 style="font-size:16px">Expand → Migrate → Contract — เปลี่ยน schema โดยไม่พัง</h3>
+        <table style="margin-top:10px">
+          <tbody>
+            <tr><td>1. Expand</td><td>เพิ่มของใหม่ข้างของเดิม: คอลัมน์ <code>customer_id</code> คู่กับ <code>cust_code</code> เดิม, ตารางใหม่คู่ตารางเก่า — ระบบเดิมไม่พัง</td></tr>
+            <tr><td>2. Migrate</td><td>backfill ข้อมูลเก่าเข้าโครงใหม่เป็น batch, ให้โค้ดเขียนทั้งสองที่ผ่าน trigger หรือ CDC, ย้ายการอ่านไปที่ใหม่ทีละจุด</td></tr>
+            <tr><td>3. Verify</td><td>เทียบจำนวนแถว, ผลรวม, checksum ต่อกลุ่ม ระหว่างเก่าและใหม่ ทุกวันจนตรงกันต่อเนื่อง</td></tr>
+            <tr><td>4. Contract</td><td>เมื่อไม่มีใครอ่านของเก่าแล้ว (ตรวจจาก <code>dm_db_index_usage_stats</code>) ค่อยลบคอลัมน์/ตารางเก่า — ขั้นนี้ย้อนไม่ได้ ทำเป็นขั้นสุดท้ายเสมอ</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+<pre><span class="c">-- ตรวจความตรงกันระหว่าง DB เดิมกับใหม่ (reconciliation) ทุกวัน</span>
+SELECT <span class="s">'legacy'</span> AS src, CAST(order_date AS date) AS d,
+       COUNT(*) AS rows_, SUM(total) AS amount,
+       CHECKSUM_AGG(CHECKSUM(order_no, total, status)) AS chk
+FROM LegacyDB.dbo.tbl_Order
+WHERE order_date &gt;= DATEADD(day, -7, GETDATE())
+GROUP BY CAST(order_date AS date)
+UNION ALL
+SELECT <span class="s">'new'</span>, CAST(ordered_at AS date),
+       COUNT(*), SUM(total),
+       CHECKSUM_AGG(CHECKSUM(order_number, total, status_code))
+FROM ShopDB.sales.orders
+WHERE ordered_at &gt;= DATEADD(day, -7, GETDATE())
+GROUP BY CAST(ordered_at AS date)
+ORDER BY d, src;
+<span class="c">-- วันไหน rows/amount/chk ไม่ตรง → ไล่หาแถวที่ต่าง ก่อนย้าย traffic เพิ่ม</span></pre>
+        <table style="margin-top:12px">
+          <tbody>
+            <tr><td>Anti-corruption layer</td><td>ตัวแปลงระหว่างโครงเก่า (<code>tbl_Order.cust_code</code>, status เป็นตัวอักษร 'A','X') กับโครงใหม่ (<code>orders.customer_id</code>, enum) — กันไม่ให้ชื่อและความหมายแปลกๆ ของเดิมรั่วเข้าโมเดลใหม่</td></tr>
+            <tr><td>ปัญหาข้อมูลเก่า</td><td>encoding ไทย (TIS-620 ปน UTF-8), วันที่ พ.ศ./ค.ศ. ปน, รหัสซ้ำ, null ที่ควรมีค่า — ทำความสะอาดใน pipeline และเก็บรายการแถวที่แปลงไม่ได้ไว้ให้คนตัดสิน ไม่ทิ้งเงียบ</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="one"><strong>กฎทองของช่วงเปลี่ยนผ่าน:</strong> ข้อมูลแต่ละตารางมี <em>เจ้าของที่เขียนได้เพียงฝั่งเดียว</em> ณ เวลาใดเวลาหนึ่ง อีกฝั่งอ่านอย่างเดียวผ่าน sync — เมื่อ module ย้ายเสร็จ ความเป็นเจ้าของก็ย้ายตาม และทิศการ sync กลับด้าน</p>
+  </section>
+
+  <!-- ================= 7 ================= -->
+  <section id="s7">
+    <h2><span class="no">07</span>Cutover และ Rollback — พิสูจน์ก่อนย้าย และถอยได้เสมอ</h2>
+    <div class="two">
+      <div>
+        <table>
+          <thead><tr><th>เทคนิค</th><th>ทำอะไร</th></tr></thead>
+          <tbody>
+            <tr><td>Characterization test</td><td>ยิง input ชุดเดียวกันเข้าระบบเดิม บันทึกผลเป็น "ค่าที่ถูก" แล้วใช้ทดสอบของใหม่ — ไม่ต้องรู้ว่ากติกาคืออะไร รู้แค่ว่าผลต้องเหมือนเดิม (ดูหน้า unit-testing)</td></tr>
+            <tr><td>Shadow traffic</td><td>proxy ส่ง request จริงไปทั้งสองฝั่ง ใช้คำตอบของระบบเดิม แต่เก็บคำตอบของใหม่ไว้เทียบ — ใช้กับ GET / read-only เท่านั้น</td></tr>
+            <tr><td>Parallel run</td><td>สำหรับงานคำนวณ (เงินเดือน, ราคา, รายงาน) รันทั้งสองระบบคู่กัน 1–2 รอบบัญชี เทียบผลทุกบรรทัด</td></tr>
+            <tr><td>Canary / % rollout</td><td>ส่งผู้ใช้ 5% → 25% → 100% ไปฝั่งใหม่ (ตาม user id ไม่ใช่สุ่มทุก request) ดู error rate และ latency แต่ละขั้น</td></tr>
+            <tr><td>Feature flag</td><td>เปิด/ปิดฝั่งใหม่ต่อ module ต่อกลุ่มผู้ใช้ได้โดยไม่ deploy</td></tr>
+            <tr><td>Read-only freeze</td><td>ช่วงย้ายข้อมูลรอบสุดท้ายของ module ที่ sync ไม่ได้ — ปิดเขียนชั่วคราว (ประกาศล่วงหน้า) ดีกว่าเสี่ยงข้อมูลหาย</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <table>
+          <thead><tr><th>แผน Rollback ต้องตอบได้ก่อนย้าย</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>ถอยอย่างไร</td><td>แก้กฎ proxy / ปิด feature flag — ทดลองถอยจริงใน staging อย่างน้อยหนึ่งครั้ง</td></tr>
+            <tr><td>ข้อมูลที่เขียนในฝั่งใหม่</td><td>ต้องไหลกลับไประบบเดิมได้ (outbox หรือ sync ย้อน) ไม่งั้นถอยแล้วข้อมูลช่วงนั้นหาย</td></tr>
+            <tr><td>ใครตัดสินใจ</td><td>กำหนดเกณฑ์ล่วงหน้า เช่น error rate &gt; 2% เป็นเวลา 10 นาที หรือยอดไม่ตรง reconciliation = ถอยทันที ไม่ต้องประชุม</td></tr>
+            <tr><td>เก็บระบบเดิมไว้นานแค่ไหน</td><td>อย่างน้อยหนึ่งรอบธุรกิจเต็ม (ปิดเดือน / ปิดไตรมาส) หลัง module สุดท้ายย้าย แบบอ่านอย่างเดียว แล้วค่อย archive</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 8 ================= -->
+  <section id="s8">
+    <h2><span class="no">08</span>Roadmap — ภาพรวมทั้งโปรเจกต์</h2>
+    <div class="road">
+      <div class="step"><div class="n">ระยะ 0 · 2–4 สัปดาห์</div><h3>สำรวจ &amp; ตัดสินใจ</h3><ul><li>inventory + log การใช้</li><li>6R ต่อ module</li><li>เลือก target stack (.NET 10)</li><li>characterization test ชุดแรก</li></ul><div class="out"><b>ได้:</b> แผน + ลำดับ module</div></div>
+      <div class="step"><div class="n">ระยะ 1 · 1–2 เดือน</div><h3>วางรากฐาน</h3><ul><li>CI/CD + environment</li><li>proxy (YARP) หน้าระบบเดิม</li><li>auth กลาง / SSO</li><li>แยก library multi-target</li><li>observability ทั้งสองฝั่ง</li></ul><div class="out"><b>ได้:</b> ย้าย module แรกได้โดยผู้ใช้ไม่รู้ตัว</div></div>
+      <div class="step"><div class="n">ระยะ 2 · 1–2 เดือน</div><h3>Module แรก</h3><ul><li>API + UI ใหม่</li><li>DB ใหม่ + sync</li><li>shadow → canary → 100%</li><li>reconciliation ทุกวัน</li></ul><div class="out"><b>ได้:</b> พิสูจน์ทั้ง pipeline จริง</div></div>
+      <div class="step"><div class="n">ระยะ 3 · ต่อเนื่อง</div><h3>ย้ายทีละ module</h3><ul><li>ทำซ้ำรูปแบบระยะ 2</li><li>ปิด route เดิมทีละตัว</li><li>ย้าย job / report</li><li>Retire ฟีเจอร์ที่ไม่ใช้</li></ul><div class="out"><b>ได้:</b> traffic ส่วนใหญ่อยู่ฝั่งใหม่</div></div>
+      <div class="step"><div class="n">ระยะ 4 · 1 รอบธุรกิจ</div><h3>ปิดระบบเดิม</h3><ul><li>read-only 1 รอบปิดบัญชี</li><li>contract schema เก่า</li><li>archive DB เดิม</li><li>ถอด proxy rule / server</li></ul><div class="out"><b>ได้:</b> ระบบเดียว .NET 10</div></div>
+    </div>
+    <p class="one"><strong>ระยะเวลาไม่ใช่ตัววัดความสำเร็จ:</strong> ตัววัดคือ ทุกเดือนมี module ที่ย้ายเสร็จและอยู่ใน production จริง — ถ้าผ่านไป 3 เดือนยังไม่มี module ไหนย้ายได้ แปลว่ากำลังกลายเป็น big-bang rewrite โดยไม่ตั้งใจ</p>
+  </section>
+
+  <!-- ================= 9 ================= -->
+  <section id="s9">
+    <h2>Checklist</h2>
+    <div class="check">
+      <label><input type="checkbox"><span>target เป็น .NET 10 (LTS ถึง พ.ย. 2028) ไม่ใช่ .NET 8 ที่หมด support 10 พ.ย. 2026<small>ส่วนหัว</small></span></label>
+      <label><input type="checkbox"><span>มี inventory ทุก module พร้อมทางที่เลือก (6R) และตัดฟีเจอร์ที่ไม่มีคนใช้ออกก่อน<small>หัวข้อ 1, 2</small></span></label>
+      <label><input type="checkbox"><span>ไม่ใช้ big-bang rewrite — มี proxy ที่ย้าย traffic ทีละ path และถอยได้<small>หัวข้อ 3</small></span></label>
+      <label><input type="checkbox"><span>auth / session ใช้ร่วมกันได้ระหว่างสองระบบตั้งแต่ module แรก<small>หัวข้อ 3</small></span></label>
+      <label><input type="checkbox"><span>logic ที่ยกมาได้ถูกแยกเป็น library multi-target ใช้ร่วมกันช่วงเปลี่ยนผ่าน<small>หัวข้อ 4</small></span></label>
+      <label><input type="checkbox"><span>ถอด <code>HttpContext.Current</code> / static state ออกจากชั้นธุรกิจ<small>หัวข้อ 4</small></span></label>
+      <label><input type="checkbox"><span>มี API + OpenAPI ก่อนเริ่ม frontend ใหม่ และมี design system กลาง<small>หัวข้อ 5</small></span></label>
+      <label><input type="checkbox"><span>ทุกตารางมีเจ้าของที่เขียนได้ฝั่งเดียว อีกฝั่งอ่านผ่าน CDC / outbox — ไม่มี dual write<small>หัวข้อ 6</small></span></label>
+      <label><input type="checkbox"><span>เปลี่ยน schema แบบ expand → migrate → contract และมี reconciliation รายวัน<small>หัวข้อ 6</small></span></label>
+      <label><input type="checkbox"><span>มี characterization test, shadow/canary, และเกณฑ์ rollback ที่ตกลงล่วงหน้า<small>หัวข้อ 7</small></span></label>
+      <label><input type="checkbox"><span>เก็บระบบเดิมแบบ read-only อย่างน้อยหนึ่งรอบปิดบัญชีก่อน archive<small>หัวข้อ 7, 8</small></span></label>
+    </div>
+  </section>
+
+  <footer>Modernization ที่ดีไม่ใช่วันที่สลับระบบใหม่ทั้งก้อน แต่คือวันธรรมดาหลายสิบวันที่มีบางส่วนย้ายไปโดยไม่มีใครสังเกต — จนวันหนึ่งระบบเดิมไม่มีอะไรเหลือให้ทำแล้ว</footer>
+</main>
+
+<script>
+  const P = [
+    { live:[],                                 old:[],                                  pct:0,   db:false,
+      sync:"ยังไม่มี sync",
+      note:"<b>ระยะ 0 — ตั้งตัวกลางหน้าระบบเดิม</b>ติดตั้ง YARP ไว้หน้า IIS ให้ทุก request ผ่าน แต่ส่งไประบบเดิม 100% ผู้ใช้ไม่เห็นอะไรเปลี่ยน — ได้จุดที่ควบคุม routing, log และ monitor ทั้งหมดก่อนเริ่มย้ายจริง" },
+    { live:["auth","order"],                   old:["auth","order"],                    pct:30,  db:true,
+      sync:"เดิม → ใหม่ : CDC (ข้อมูลลูกค้า, สินค้า)<br>ใหม่ → เดิม : outbox (คำสั่งซื้อ)",
+      note:"<b>ระยะ 1 — ย้าย login และคำสั่งซื้อ</b>auth ย้ายก่อนเพื่อให้ทั้งสองฝั่งใช้ตัวตนเดียวกัน คำสั่งซื้อเป็น module แรกที่พิสูจน์ทั้งเส้นทาง: API ใหม่, UI ใหม่, DB ใหม่ ส่งคำสั่งซื้อกลับไประบบเดิมผ่าน outbox เพราะหน้าอนุมัติเดิมยังอ่านอยู่" },
+    { live:["auth","order","approve"],         old:["auth","order","approve"],          pct:60,  db:true,
+      sync:"เดิม → ใหม่ : CDC (ข้อมูลหลัก)<br>ใหม่ → เดิม : outbox (คำสั่งซื้อ, การอนุมัติ → รายงานเดิม)",
+      note:"<b>ระยะ 2 — ครึ่งทาง</b>การอนุมัติย้ายมา logic จาก stored procedure ถูกแปลงเป็น domain rule ที่มี test ข้อมูลหลักยังเป็นของระบบเดิม (เจ้าของยังอยู่ฝั่งซ้าย) ฝั่งใหม่อ่านผ่าน CDC — ยังไม่มีตารางไหนที่สองฝั่งเขียนพร้อมกัน" },
+    { live:["auth","order","approve","master"], old:["auth","order","approve","master"], pct:90,  db:true,
+      sync:"ทิศกลับ: ใหม่ → เดิม ทั้งหมด<br>(ให้รายงานเดิมยังทำงานได้)",
+      note:"<b>ระยะ 3 — เกือบหมด</b>ข้อมูลหลักย้าย เจ้าของข้อมูลทุกตารางอยู่ฝั่งใหม่แล้ว sync กลับด้านเป็นใหม่ → เดิม เพื่อให้รายงาน WebForms ที่เหลือยังใช้ได้ระหว่างสร้าง read model ใหม่" },
+    { live:["auth","order","approve","master","report"], old:["auth","order","approve","master","report"], pct:100, db:true,
+      sync:"ไม่มี sync · LegacyDB read-only → archive",
+      note:"<b>ระยะ 4 — ปิดระบบเดิม</b>รายงานย้ายเป็น read model บน DB ใหม่ ระบบเดิมเปิด read-only ครบหนึ่งรอบปิดบัญชี แล้ว archive DB และถอด server — proxy ยังอยู่เป็น gateway ของระบบใหม่ต่อไปได้" }
+  ];
+  function show(i){
+    const p=P[i];
+    document.querySelectorAll(".phases button").forEach(b=>b.setAttribute("aria-pressed", +b.dataset.p===i));
+    document.querySelectorAll("#znew .mod").forEach(m=>m.classList.toggle("live", p.live.includes(m.dataset.m)));
+    document.querySelectorAll("#zold .mod").forEach(m=>m.classList.toggle("gone", p.old.includes(m.dataset.m)));
+    document.getElementById("newdb").classList.toggle("live", p.db);
+    document.getElementById("olddb").style.opacity = i===4 ? .35 : 1;
+    const so=document.getElementById("so"), sn=document.getElementById("sn");
+    so.style.width=(100-p.pct)+"%"; sn.style.width=p.pct+"%";
+    so.textContent = p.pct<100 ? `เดิม ${100-p.pct}%` : ""; sn.textContent = p.pct>0 ? `ใหม่ ${p.pct}%` : "";
+    document.getElementById("sync").innerHTML=p.sync;
+    document.getElementById("pnote").innerHTML=p.note;
+  }
+  document.querySelectorAll(".phases button").forEach(b=>b.addEventListener("click",()=>show(+b.dataset.p)));
+  show(0);
+</script>
+</body>
+</html>
