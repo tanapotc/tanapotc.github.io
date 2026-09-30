@@ -1,1 +1,784 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flood Fill — อัลกอริทึมถังสี อธิบายทีละก้าว</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF2F5; --grid:rgba(27,42,65,.08);
+    --ink:#1B2A41; --ink-2:#4A5A6E; --line:#B9C4D0;
+    --fill:#1E6FB8;    /* สีที่เทลงไป */
+    --front:#D08A1E;   /* คิว/สแตก */
+    --cur:#C8503A;     /* ช่องที่กำลังทำ */
+    --other:#2E7D4F;   /* สีอื่นที่ไม่ใช่เป้าหมาย */
+    --wall:#33465C;
+    --hi:#FFD966; --radius:6px;
+    --font:"IBM Plex Sans Thai",system-ui,sans-serif;
+    --code:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:24px 24px;line-height:1.7;font-size:17px}
+  main{max-width:1160px;margin:0 auto;padding:40px 24px 96px}
+  h1,h2,h3{line-height:1.25;margin:0}
+  h1{font-size:clamp(30px,4.6vw,48px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:clamp(22px,2.8vw,30px);font-weight:700;margin-bottom:6px}
+  h2 .no{font-family:var(--code);font-weight:400;font-size:.6em;color:var(--ink-2);margin-right:10px;vertical-align:middle}
+  h3{font-size:18px;font-weight:600}
+  p{margin:0 0 12px;max-width:64ch}
+  .lead{font-size:19px;color:var(--ink-2);max-width:62ch}
+  section{margin-top:80px}
+  code{font-family:var(--code);font-size:.9em;background:#fff;border:1px solid var(--line);padding:1px 6px;border-radius:4px}
+  pre{font-family:var(--code);font-size:12.5px;line-height:1.55;background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:14px 16px;overflow-x:auto;margin:0;color:var(--ink)}
+  pre .c{color:var(--ink-2);font-style:italic} pre .k{color:#7B4FA0;font-weight:500} pre .s{color:var(--other)}
+  pre.bad{border-color:var(--cur);border-left-width:6px} pre.good{border-color:var(--other);border-left-width:6px}
+  .tag{display:inline-block;font-family:var(--code);font-size:11px;padding:1px 8px;border-radius:4px;color:#fff;margin-bottom:6px}
+  .tag.bad{background:var(--cur)} .tag.good{background:var(--other)}
+  .one{font-size:15px;color:var(--ink-2);border-left:3px solid var(--hi);background:#fff;padding:10px 14px;border-radius:0 var(--radius) var(--radius) 0;margin-top:16px;max-width:none}
+  .one strong{color:var(--ink)}
+  nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  nav a{font-size:14px;text-decoration:none;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:5px 14px}
+  nav a:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  @media (max-width:900px){.two{grid-template-columns:1fr}}
+  .canvas{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:22px;position:relative;box-shadow:6px 6px 0 rgba(27,42,65,.12)}
+
+  /* ---- grid ---- */
+  .board{display:grid;gap:2px;background:var(--line);border:2px solid var(--ink);border-radius:4px;padding:2px;touch-action:manipulation}
+  .cell{aspect-ratio:1/1;background:#fff;border-radius:2px;cursor:crosshair;position:relative;transition:background .12s}
+  .cell.w{background:var(--wall);cursor:not-allowed}
+  .cell.o{background:var(--other)}
+  .cell.f{background:var(--fill)}
+  .cell.q{background:#FBE9C8;box-shadow:inset 0 0 0 2px var(--front)}
+  .cell.cur{box-shadow:inset 0 0 0 3px var(--cur);z-index:2}
+  .cell.seed::after{content:"";position:absolute;inset:26%;border-radius:50%;background:#fff;opacity:.85}
+  .hint{font-size:13.5px;color:var(--ink-2);margin-top:8px}
+
+  .ctrls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .ctrls button{font-family:var(--font);font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+  .ctrls button[aria-pressed=true]{background:var(--ink);color:#fff}
+  .ctrls button.primary{background:var(--fill);border-color:var(--fill);color:#fff}
+  .ctrls button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+  .grp{font-size:12.5px;color:var(--ink-2);font-family:var(--code);margin-right:2px}
+  .rng{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-2)}
+  .rng input{width:110px}
+
+  .panel{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+  @media (max-width:560px){.panel{grid-template-columns:repeat(2,1fr)}}
+  .stat{border:1.5px solid var(--line);border-radius:var(--radius);padding:7px 10px;background:#fff}
+  .stat small{display:block;color:var(--ink-2);font-size:11.5px}
+  .stat b{font-family:var(--code);font-weight:500;font-size:17px}
+  .stat.f b{color:var(--fill)} .stat.q b{color:var(--front)} .stat.m b{color:var(--cur)}
+
+  .queue{margin-top:12px;border:1.5px solid var(--front);border-radius:var(--radius);background:#FFFBF2;padding:10px 12px;min-height:74px}
+  .queue .t{font-family:var(--code);font-size:11.5px;color:var(--front);margin-bottom:6px}
+  .queue .items{display:flex;gap:4px;flex-wrap:wrap;font-family:var(--code);font-size:11.5px}
+  .queue .items span{border:1.5px solid var(--front);color:var(--front);background:#fff;border-radius:4px;padding:1px 6px}
+  .queue .items span.next{background:var(--front);color:#fff}
+  .expl{margin-top:12px;font-size:14.5px;background:#FFFBEA;border-left:3px solid var(--hi);padding:10px 14px;border-radius:0 var(--radius) var(--radius) 0;min-height:62px}
+  .expl b{display:block;margin-bottom:2px}
+
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:10px}
+  .legend i{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:-2px;margin-right:5px;border:1.5px solid var(--line)}
+
+  /* connectivity mini */
+  .conn{display:flex;gap:26px;flex-wrap:wrap;justify-content:center}
+  .mini{display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,34px);gap:3px}
+  .mini div{background:#fff;border:1.5px solid var(--line);border-radius:3px}
+  .mini div.c{background:var(--cur);border-color:var(--cur)}
+  .mini div.n{background:#CFE0F0;border-color:var(--fill)}
+  .mcap{text-align:center;font-family:var(--code);font-size:12px;color:var(--ink-2);margin-top:8px}
+
+  /* tolerance */
+  .tol{display:flex;gap:3px;margin-top:10px}
+  .tol div{flex:1;height:52px;border-radius:3px;border:2px solid transparent;position:relative;display:flex;align-items:flex-end;justify-content:center;font-family:var(--code);font-size:9.5px;padding-bottom:2px}
+  .tol div.match{border-color:var(--fill);box-shadow:0 0 0 2px #CFE0F0}
+  .tol div.seed{border-color:var(--cur)}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+  th{background:#F3F6F9;font-weight:600}
+  tr:last-child td{border-bottom:0}
+  td:first-child{font-weight:600;width:20%;color:var(--ink-2)}
+  td.num{font-family:var(--code);text-align:right;font-size:13px}
+  td code{font-size:12px}
+  .yes{color:var(--other);font-weight:600} .no{color:var(--cur);font-weight:600} .mid{color:var(--front);font-weight:600}
+  @media (max-width:640px){table,thead,tbody,tr,th,td{display:block}thead{display:none}td{border-bottom:0;padding:5px 12px}td:first-child{padding-top:14px;color:var(--ink)}td.num{text-align:left}tr{border-bottom:1px solid var(--line);padding-bottom:10px}}
+
+  /* checklist */
+  .check{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:6px 18px}
+  .check label{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px;cursor:pointer}
+  .check label:last-child{border-bottom:0}
+  .check input{margin-top:6px;accent-color:var(--other);width:16px;height:16px;flex:none}
+  .check small{display:block;color:var(--ink-2);font-size:13px}
+  footer{margin-top:64px;font-size:14px;color:var(--ink-2)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <h1>Flood Fill<br>อัลกอริทึม “ถังสี” ที่อ่านจบแล้วเขียนเองได้</h1>
+    <p class="lead">หลักการมีประโยคเดียว: <strong>เริ่มจากช่องหนึ่ง แล้วลามไปทุกช่องข้างเคียงที่เป็นสีเดียวกับช่องเริ่มต้น จนกว่าจะชนขอบหรือชนสีอื่น</strong> ที่เหลือทั้งหน้าคือการตอบว่า “ลามอย่างไร” — เพราะลำดับการลามคือสิ่งเดียวที่ทำให้ BFS, DFS, recursion และ scanline ต่างกัน</p>
+    <nav aria-label="หัวข้อ">
+      <a href="#s1">1 หลักการ</a><a href="#s2">2 ลองเล่นทีละก้าว</a><a href="#s3">3 4-way กับ 8-way</a><a href="#s4">4 สี่วิธีเขียน</a><a href="#s5">5 เทียบตัวเลขจริง</a><a href="#s6">6 กับดัก</a><a href="#s7">7 Tolerance</a><a href="#s8">8 ใช้ที่ไหนบ้าง</a><a href="#s9">Checklist</a>
+    </nav>
+  </header>
+
+  <!-- ============ 1 ============ -->
+  <section id="s1">
+    <h2><span class="no">01</span>หลักการ — มีแค่ 3 อย่างที่ต้องรู้</h2>
+    <div class="two">
+      <div>
+        <table>
+          <tbody>
+            <tr><td>จุดเริ่ม (seed)</td><td>ช่องที่ผู้ใช้คลิก — <code>(x, y)</code></td></tr>
+            <tr><td>สีเป้าหมาย (target)</td><td>สีของช่องเริ่มต้น <em>ณ ตอนที่คลิก</em> — ช่องที่จะถูกเทต้องเป็นสีนี้เท่านั้น</td></tr>
+            <tr><td>สีใหม่ (replacement)</td><td>สีที่จะเทลงไป</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:14px;font-size:15.5px">เงื่อนไขที่ช่องหนึ่งจะถูกเท มี 3 ข้อ ต้องจริงทั้งหมด:</p>
+        <table>
+          <tbody>
+            <tr><td>1. อยู่ในขอบเขต</td><td><code>0 ≤ x &lt; W</code> และ <code>0 ≤ y &lt; H</code></td></tr>
+            <tr><td>2. สีตรงกับ target</td><td>ไม่ใช่กำแพง ไม่ใช่สีอื่น</td></tr>
+            <tr><td>3. ยังไม่เคยเท</td><td>กันวนซ้ำไม่รู้จบ — ข้อนี้คนลืมบ่อยที่สุด</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+<pre><span class="c">// โครงร่างเดียวกันทุกวิธี ต่างกันแค่ "หยิบช่องถัดไปจากไหน"</span>
+FloodFill(seed, target, newColor):
+    <span class="k">if</span> target == newColor: <span class="k">return</span>        <span class="c">// ★ กันลูปไม่รู้จบ</span>
+
+    container = [ seed ]                  <span class="c">// คิว หรือ สแตก</span>
+    <span class="k">while</span> container ไม่ว่าง:
+        cell = container.หยิบออกมา 1 ช่อง  <span class="c">// ← จุดเดียวที่ต่างกัน</span>
+        ทาสี cell เป็น newColor
+
+        <span class="k">for</span> เพื่อนบ้านของ cell:
+            <span class="k">if</span> อยู่ในขอบเขต
+               <span class="k">and</span> สี == target
+               <span class="k">and</span> ยังไม่อยู่ใน container:
+                container.ใส่เพิ่ม(เพื่อนบ้าน)</pre>
+        <p class="one" style="margin-top:14px"><strong>หยิบจากไหน = ได้อัลกอริทึมอะไร</strong><br>หยิบจาก<em>หน้า</em>คิว → BFS ลามเป็นวงกลมออกจากจุดคลิก<br>หยิบจาก<em>บน</em>สแตก → DFS พุ่งเป็นเส้นยาวไปทางเดียวก่อน<br>เรียกตัวเองซ้ำ → DFS ที่ใช้ call stack ของภาษาแทน</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section id="s2">
+    <h2><span class="no">02</span>ลองเล่นทีละก้าว</h2>
+    <p class="lead">คลิกช่องสีขาวช่องใดก็ได้เพื่อเริ่มเท แล้วกด “ก้าวถัดไป” หรือ “เล่น” — สังเกตสีส้ม (ช่องที่รออยู่ในคิว/สแตก) ว่ามันเรียงตัวต่างกันอย่างไรในแต่ละอัลกอริทึม</p>
+    <div class="two" style="grid-template-columns:1.25fr 1fr">
+      <div class="canvas">
+        <div class="ctrls">
+          <span class="grp">อัลกอริทึม</span>
+          <button type="button" data-algo="bfs" aria-pressed="true">BFS (คิว)</button>
+          <button type="button" data-algo="dfs" aria-pressed="false">DFS (สแตก)</button>
+          <button type="button" data-algo="rec" aria-pressed="false">DFS (recursion)</button>
+          <button type="button" data-algo="scan" aria-pressed="false">Scanline</button>
+        </div>
+        <div class="ctrls">
+          <span class="grp">เพื่อนบ้าน</span>
+          <button type="button" data-conn="4" aria-pressed="true">4 ทิศ</button>
+          <button type="button" data-conn="8" aria-pressed="false">8 ทิศ</button>
+          <span class="grp" style="margin-left:8px">กำแพง</span>
+          <button type="button" id="leak" aria-pressed="false">เจาะรูรั่ว</button>
+        </div>
+        <div class="ctrls">
+          <button type="button" class="primary" id="play">▶ เล่น</button>
+          <button type="button" id="step">ก้าวถัดไป</button>
+          <button type="button" id="reset">ล้าง</button>
+          <span class="rng">เร็ว <input type="range" id="speed" min="1" max="60" value="22"></span>
+        </div>
+
+        <div class="board" id="board" aria-label="ตารางสำหรับทดลอง flood fill"></div>
+        <div class="legend">
+          <span><i style="background:#fff"></i>ว่าง (สีเป้าหมาย)</span>
+          <span><i style="background:var(--wall);border-color:var(--wall)"></i>กำแพง</span>
+          <span><i style="background:var(--other);border-color:var(--other)"></i>สีอื่น</span>
+          <span><i style="background:var(--fill);border-color:var(--fill)"></i>เทแล้ว</span>
+          <span><i style="background:#FBE9C8;border-color:var(--front)"></i>รอในคิว/สแตก</span>
+        </div>
+        <div class="hint">คลิกช่องสีขาวเพื่อวางจุดเริ่ม · คลิกช่องสีเขียวเพื่อดูว่าเทเฉพาะ “สีเดียวกับจุดเริ่ม” เท่านั้น · ห้องเพชรทางขวามีผนังเป็นเส้นทแยง ไว้ทดสอบ 4 ทิศ กับ 8 ทิศ</div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="stat"><small>ก้าวที่</small><b id="st-step">0</b></div>
+          <div class="stat f"><small>เทไปแล้ว</small><b id="st-fill">0</b></div>
+          <div class="stat q"><small>รออยู่ตอนนี้</small><b id="st-q">0</b></div>
+          <div class="stat m"><small>รอสูงสุด</small><b id="st-max">0</b></div>
+        </div>
+        <div class="queue">
+          <div class="t" id="q-title">คิว (FIFO) — หยิบจากซ้ายสุด</div>
+          <div class="items" id="q-items"><span style="border:0;background:none;color:var(--ink-2)">ยังไม่เริ่ม — คลิกบนตารางก่อน</span></div>
+        </div>
+        <div class="expl" id="expl"><b>ยังไม่เริ่ม</b>คลิกช่องสีขาวในตารางเพื่อวางจุดเริ่ม แล้วกดเล่นหรือก้าวทีละก้าว</div>
+        <table style="margin-top:14px">
+          <tbody>
+            <tr><td>ลองอันดับแรก</td><td>คลิกในห้องซ้าย แล้วสลับ BFS ↔ DFS ดูรูปร่างของ “ช่องที่รออยู่” — BFS เป็นเส้นโค้งล้อมรอบจุดคลิก ส่วน DFS เป็นเส้นยาวบางๆ ส่วน Scanline แทบไม่มีเลย</td></tr>
+            <tr><td>รูรั่ว 1 ช่อง</td><td>กด <em>เจาะรูรั่ว</em> แล้วเทในห้องซ้ายอีกครั้ง — จาก 84 ช่องกลายเป็น 316 ช่อง สีรั่วออกทั้งหน้าจอเพราะผนังขาดไปช่องเดียว นี่คือ bug ที่ผู้ใช้โปรแกรมวาดรูปเจอบ่อยที่สุด</td></tr>
+            <tr><td>ห้องเพชร (ผนังทแยง)</td><td>คลิกกลางห้องเพชรทางขวาด้วย <em>4 ทิศ</em> → เทได้ 13 ช่อง ผนังกั้นอยู่ · สลับเป็น <em>8 ทิศ</em> แล้วคลิกซ้ำ → สีลอดผ่านมุมที่ผนังแตะกันแบบเฉียงออกไปทั้งแผนที่ ทั้งที่ตาเห็นว่าห้องปิดสนิท</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section id="s3">
+    <h2><span class="no">03</span>4-way กับ 8-way — นิยามของคำว่า “ติดกัน”</h2>
+    <div class="two">
+      <div class="canvas">
+        <div class="conn">
+          <div>
+            <div class="mini">
+              <div></div><div class="n"></div><div></div>
+              <div class="n"></div><div class="c"></div><div class="n"></div>
+              <div></div><div class="n"></div><div></div>
+            </div>
+            <div class="mcap">4-way · von Neumann</div>
+          </div>
+          <div>
+            <div class="mini">
+              <div class="n"></div><div class="n"></div><div class="n"></div>
+              <div class="n"></div><div class="c"></div><div class="n"></div>
+              <div class="n"></div><div class="n"></div><div class="n"></div>
+            </div>
+            <div class="mcap">8-way · Moore</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <table>
+          <thead><tr><th></th><th>4 ทิศ</th><th>8 ทิศ</th></tr></thead>
+          <tbody>
+            <tr><td>เพื่อนบ้าน</td><td>บน ล่าง ซ้าย ขวา</td><td>เพิ่มแนวทแยง 4 มุม</td></tr>
+            <tr><td>เส้นทแยงบางๆ</td><td>ตัดขาด — สีไม่ลอดผ่าน</td><td>ลอดผ่านได้</td></tr>
+            <tr><td>เหมาะกับ</td><td>ถังสีในโปรแกรมวาดรูป, เกมกระดาน — ตรงกับสัญชาตญาณผู้ใช้ว่า “เส้นทแยงยังกั้นอยู่”</td><td>Minesweeper, หา connected component ในภาพที่มีรอยขาดเล็กๆ, เกมที่เดินทแยงได้</td></tr>
+            <tr><td>ต้นทุน</td><td>เช็ค 4 ครั้งต่อช่อง</td><td>เช็ค 8 ครั้งต่อช่อง (ช้ากว่าราวสองเท่า)</td></tr>
+            <tr><td>Scanline</td><td class="yes">ใช้ได้</td><td class="no">ใช้ไม่ได้ตรงๆ — scanline คิดเป็นช่วงในแถว จึงเป็น 4 ทิศโดยธรรมชาติ</td></tr>
+          </tbody>
+        </table>
+        <p class="one"><strong>ข้อควรระวังแบบคลาสสิก:</strong> ถ้าเลือก 8 ทิศ กำแพงที่วาดแบบทแยง (ช่องต่อกันที่มุม) จะกั้นสีไม่อยู่ — ผู้ใช้จะเห็นสีรั่วทะลุเส้นที่ตาเห็นว่าปิดสนิท โปรแกรมวาดรูปเกือบทั้งหมดจึงใช้ 4 ทิศ</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section id="s4">
+    <h2><span class="no">04</span>สี่วิธีเขียน — โค้ดจริงใน C#</h2>
+    <div class="two">
+      <div>
+        <span class="tag bad">1. Recursion — สั้นที่สุด อันตรายที่สุด</span>
+<pre class="bad"><span class="k">void</span> Fill(<span class="k">int</span>[,] g, <span class="k">int</span> x, <span class="k">int</span> y, <span class="k">int</span> target, <span class="k">int</span> newColor)
+{
+    <span class="k">if</span> (x &lt; 0 || y &lt; 0 || x &gt;= W || y &gt;= H) <span class="k">return</span>;
+    <span class="k">if</span> (g[y, x] != target) <span class="k">return</span>;      <span class="c">// กำแพง/สีอื่น/เททับแล้ว</span>
+
+    g[y, x] = newColor;                   <span class="c">// ทาก่อน = ทำหน้าที่ "visited" ไปในตัว</span>
+
+    Fill(g, x + 1, y, target, newColor);
+    Fill(g, x - 1, y, target, newColor);
+    Fill(g, x, y + 1, target, newColor);
+    Fill(g, x, y - 1, target, newColor);
+}
+
+<span class="c">// ★ ผู้เรียกต้องเช็คก่อน ไม่งั้นลูปไม่รู้จบ</span>
+<span class="k">if</span> (target != newColor) Fill(g, sx, sy, target, newColor);</pre>
+        <p style="font-size:14px;color:var(--ink-2);margin-top:8px">อ่านง่ายที่สุดและตรงกับนิยามที่สุด แต่ภาพ 1920×1080 ที่เป็นสีเดียวทั้งภาพจะเรียกซ้อนกันได้ถึงหลักล้านชั้น → <code>StackOverflowException</code> ซึ่งใน .NET <strong>ดักด้วย try/catch ไม่ได้</strong> process ตายทันที ใช้ได้เฉพาะตอนที่รู้แน่ว่าพื้นที่เล็ก</p>
+
+        <span class="tag good" style="margin-top:16px">3. DFS แบบสแตกของตัวเอง</span>
+<pre class="good"><span class="k">void</span> FillDfs(<span class="k">int</span>[,] g, <span class="k">int</span> sx, <span class="k">int</span> sy, <span class="k">int</span> newColor)
+{
+    <span class="k">int</span> target = g[sy, sx];
+    <span class="k">if</span> (target == newColor) <span class="k">return</span>;
+
+    <span class="k">var</span> st = <span class="k">new</span> Stack&lt;(<span class="k">int</span> x, <span class="k">int</span> y)&gt;();
+    st.Push((sx, sy));
+    g[sy, sx] = newColor;
+
+    <span class="k">while</span> (st.Count &gt; 0)
+    {
+        <span class="k">var</span> (x, y) = st.Pop();            <span class="c">// ← ต่างจาก BFS แค่บรรทัดนี้</span>
+        <span class="k">foreach</span> (<span class="k">var</span> (dx, dy) <span class="k">in</span> Dirs4)
+        {
+            <span class="k">int</span> nx = x + dx, ny = y + dy;
+            <span class="k">if</span> ((<span class="k">uint</span>)nx &gt;= W || (<span class="k">uint</span>)ny &gt;= H) <span class="k">continue</span>;
+            <span class="k">if</span> (g[ny, nx] != target) <span class="k">continue</span>;
+            g[ny, nx] = newColor;         <span class="c">// ★ ทาตอน "ใส่เข้าสแตก" ไม่ใช่ตอนหยิบออก</span>
+            st.Push((nx, ny));
+        }
+    }
+}</pre>
+        <p style="font-size:14px;color:var(--ink-2);margin-top:8px">ทาสีตอนใส่เข้า container ไม่ใช่ตอนหยิบออก — ถ้าทาตอนหยิบออก ช่องเดียวจะถูกใส่ซ้ำหลายรอบจากเพื่อนบ้านหลายตัว สแตกบวมเป็นหลายเท่า</p>
+      </div>
+      <div>
+        <span class="tag good">2. BFS แบบคิว</span>
+<pre class="good"><span class="k">static readonly</span> (<span class="k">int</span> dx, <span class="k">int</span> dy)[] Dirs4 = [(1,0), (-1,0), (0,1), (0,-1)];
+
+<span class="k">void</span> FillBfs(<span class="k">int</span>[,] g, <span class="k">int</span> sx, <span class="k">int</span> sy, <span class="k">int</span> newColor)
+{
+    <span class="k">int</span> target = g[sy, sx];
+    <span class="k">if</span> (target == newColor) <span class="k">return</span>;
+
+    <span class="k">var</span> q = <span class="k">new</span> Queue&lt;(<span class="k">int</span> x, <span class="k">int</span> y)&gt;();
+    q.Enqueue((sx, sy));
+    g[sy, sx] = newColor;
+
+    <span class="k">while</span> (q.Count &gt; 0)
+    {
+        <span class="k">var</span> (x, y) = q.Dequeue();
+        <span class="k">foreach</span> (<span class="k">var</span> (dx, dy) <span class="k">in</span> Dirs4)
+        {
+            <span class="k">int</span> nx = x + dx, ny = y + dy;
+            <span class="k">if</span> ((<span class="k">uint</span>)nx &gt;= W || (<span class="k">uint</span>)ny &gt;= H) <span class="k">continue</span>;
+            <span class="k">if</span> (g[ny, nx] != target) <span class="k">continue</span>;
+            g[ny, nx] = newColor;
+            q.Enqueue((nx, ny));
+        }
+    }
+}</pre>
+        <p style="font-size:14px;color:var(--ink-2);margin-top:8px"><code>(uint)nx &gt;= W</code> เป็นทริกเช็คขอบเขตสองด้านด้วยการเทียบครั้งเดียว — ค่าติดลบจะกลายเป็นเลขบวกมหาศาลเมื่อ cast เป็น <code>uint</code> จึงเข้าเงื่อนไขเดียวกัน</p>
+
+        <span class="tag good" style="margin-top:16px">4. Scanline — เร็วที่สุดในทางปฏิบัติ</span>
+<pre class="good"><span class="k">void</span> FillScanline(<span class="k">int</span>[,] g, <span class="k">int</span> sx, <span class="k">int</span> sy, <span class="k">int</span> newColor)
+{
+    <span class="k">int</span> target = g[sy, sx];
+    <span class="k">if</span> (target == newColor) <span class="k">return</span>;
+
+    <span class="k">var</span> st = <span class="k">new</span> Stack&lt;(<span class="k">int</span> x, <span class="k">int</span> y)&gt;();
+    st.Push((sx, sy));
+
+    <span class="k">while</span> (st.Count &gt; 0)
+    {
+        <span class="k">var</span> (sx0, y) = st.Pop();
+        <span class="k">int</span> x = sx0;
+        <span class="k">while</span> (x &gt;= 0 &amp;&amp; g[y, x] == target) x--;   <span class="c">// ถอยไปสุดซ้ายของช่วง</span>
+        x++;
+
+        <span class="k">bool</span> up = <span class="k">false</span>, down = <span class="k">false</span>;
+        <span class="k">while</span> (x &lt; W &amp;&amp; g[y, x] == target)        <span class="c">// กวาดขวายาวรวดเดียว</span>
+        {
+            g[y, x] = newColor;
+
+            <span class="c">// ใส่ seed แค่ "ช่องแรกของแต่ละช่วงใหม่" ไม่ใช่ทุกช่อง</span>
+            <span class="k">if</span> (y &gt; 0)
+            {
+                <span class="k">bool</span> m = g[y - 1, x] == target;
+                <span class="k">if</span> (m &amp;&amp; !up) { st.Push((x, y - 1)); up = <span class="k">true</span>; }
+                <span class="k">else if</span> (!m) up = <span class="k">false</span>;
+            }
+            <span class="k">if</span> (y &lt; H - 1)
+            {
+                <span class="k">bool</span> m = g[y + 1, x] == target;
+                <span class="k">if</span> (m &amp;&amp; !down) { st.Push((x, y + 1)); down = <span class="k">true</span>; }
+                <span class="k">else if</span> (!m) down = <span class="k">false</span>;
+            }
+            x++;
+        }
+    }
+}</pre>
+        <p style="font-size:14px;color:var(--ink-2);margin-top:8px">แทนที่จะจัดการทีละช่อง มันกวาดทีละ “ช่วงในแถว” และใส่ seed เฉพาะช่องแรกของช่วงใหม่ในแถวบน/ล่าง — สแตกจึงเล็กกว่ามาก และเข้าถึงหน่วยความจำต่อเนื่องตามแถว (cache-friendly) นี่คือวิธีที่โปรแกรมวาดรูปจริงใช้</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section id="s5">
+    <h2><span class="no">05</span>เทียบตัวเลขจริงจากตารางด้านบน</h2>
+    <p class="lead">ตัวเลขนี้คำนวณสดจากจุดเริ่มล่าสุดที่คุณคลิก ทั้ง 4 อัลกอริทึมเทได้ผลลัพธ์ “ช่องที่ถูกเท” เท่ากันเสมอ สิ่งที่ต่างคือหน่วยความจำที่ใช้ระหว่างทาง</p>
+    <table id="cmp">
+      <thead><tr><th>อัลกอริทึม</th><th class="num">ช่องที่เท</th><th class="num">จำนวนก้าว</th><th class="num">หน่วยความจำสูงสุด</th><th>ลักษณะการลาม</th></tr></thead>
+      <tbody><tr><td colspan="5" style="color:var(--ink-2);font-weight:400">คลิกจุดเริ่มในตารางหัวข้อ 2 เพื่อดูตัวเลข</td></tr></tbody>
+    </table>
+    <table style="margin-top:18px">
+      <thead><tr><th>เกณฑ์</th><th>Recursion</th><th>BFS (คิว)</th><th>DFS (สแตก)</th><th>Scanline</th></tr></thead>
+      <tbody>
+        <tr><td>อ่านง่าย</td><td class="yes">ดีที่สุด</td><td class="yes">ดี</td><td class="yes">ดี</td><td class="mid">ซับซ้อนสุด</td></tr>
+        <tr><td>หน่วยความจำ</td><td class="no">call stack — ล้นได้</td><td class="mid">กว้างตามเส้นรอบวง</td><td class="mid">ลึกตามเส้นทาง</td><td class="yes">น้อยที่สุด (เก็บ seed ของช่วง)</td></tr>
+        <tr><td>ความเร็ว</td><td class="mid">มี overhead การเรียกฟังก์ชัน</td><td class="mid">ปานกลาง</td><td class="mid">ปานกลาง</td><td class="yes">เร็วสุด — กวาดตามแถว cache ชอบ</td></tr>
+        <tr><td>เหมาะกับ</td><td>พื้นที่เล็กที่รู้ขอบเขตแน่ (ตารางเกม, ปริศนา)</td><td>ต้องการเอฟเฟกต์ลามเป็นวงจากจุดคลิก, หาระยะทางไปด้วย</td><td>ทั่วไป เขียนง่าย ปลอดภัยกว่า recursion</td><td>ภาพจริง ความละเอียดสูง</td></tr>
+      </tbody>
+    </table>
+    <p class="one"><strong>ข้อสังเกตที่มักไม่มีใครบอก:</strong> BFS กับ DFS ใช้หน่วยความจำมากที่สุดคนละสถานการณ์ — BFS แย่เมื่อพื้นที่กว้างและกลม (เส้นรอบวงยาว) ส่วน DFS แย่เมื่อพื้นที่เป็นทางเดินคดเคี้ยวยาว ถ้าต้องเลือกวิธีเดียวโดยไม่รู้รูปร่างข้อมูล ให้เลือก scanline</p>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section id="s6">
+    <h2><span class="no">06</span>กับดักที่พบบ่อย</h2>
+    <table>
+      <thead><tr><th>อาการ</th><th>สาเหตุ</th><th>แก้</th></tr></thead>
+      <tbody>
+        <tr><td>โปรแกรมค้าง / วนไม่รู้จบ</td><td>สีใหม่เท่ากับสีเป้าหมาย — ทาแล้วช่องนั้นยังเป็น target อยู่ จึงถูกใส่กลับเข้า container ไม่รู้จบ</td><td><code>if (target == newColor) return;</code> บรรทัดแรกสุด</td></tr>
+        <tr><td>หน่วยความจำบวม / ช้ามาก</td><td>ทาสีตอน <em>หยิบออก</em> จาก container ทำให้ช่องเดียวถูกใส่ซ้ำจากเพื่อนบ้านทุกตัว</td><td>ทาสี (หรือ mark visited) ตอน <em>ใส่เข้า</em> container</td></tr>
+        <tr><td>StackOverflowException</td><td>recursion บนพื้นที่ใหญ่ — .NET ดักไม่ได้ process ตายทันที</td><td>เปลี่ยนเป็นสแตกของตัวเอง หรือ scanline</td></tr>
+        <tr><td>สีรั่วออกนอกรูป</td><td>เส้นขอบมีรูแม้เพียงพิกเซลเดียว (ลอง <em>เจาะรูรั่ว</em> ในหัวข้อ 2)</td><td>เป็นพฤติกรรมที่ถูกต้องของอัลกอริทึม — แก้ที่ข้อมูล เช่น ปิดรอยรั่วก่อน หรือให้ผู้ใช้จำกัดขอบเขตการเท (fill within selection)</td></tr>
+        <tr><td>สีลอดผ่านเส้นทแยง</td><td>ใช้ 8 ทิศกับกำแพงที่ต่อกันแบบเฉียง</td><td>ใช้ 4 ทิศสำหรับงานถังสี</td></tr>
+        <tr><td>เหลือขอบสีเดิมรอบพื้นที่ที่เท</td><td>ภาพจริงมี anti-aliasing — พิกเซลขอบเป็นสีกลางๆ ที่ไม่ตรงกับ target เป๊ะ</td><td>ใช้ tolerance (หัวข้อ 7) และ/หรือขยายผลลัพธ์ออก 1–2 พิกเซล (feather / grow)</td></tr>
+        <tr><td>ผลไม่เหมือนกันทุกครั้ง</td><td>อ่านสีเป้าหมายใหม่ระหว่างทาง แทนที่จะอ่านครั้งเดียวตอนเริ่ม</td><td>เก็บ <code>target</code> ไว้ก่อนเข้าลูป แล้วห้ามอ่านซ้ำ</td></tr>
+        <tr><td>UI ค้างตอนเทภาพใหญ่</td><td>ทำงานบน UI thread</td><td>ย้ายไป background แล้วรายงานความคืบหน้า หรือทำเป็น chunk ต่อเฟรม</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section id="s7">
+    <h2><span class="no">07</span>Tolerance — จากตารางสู่ภาพจริง</h2>
+    <p class="lead">ในภาพถ่ายจริงไม่มีสองพิกเซลที่สีเท่ากันเป๊ะ เงื่อนไข “สี == target” จึงต้องกลายเป็น “สีต่างจาก target ไม่เกินค่าที่ยอมรับ” ลากค่า tolerance ดูว่าช่องไหนถูกนับว่า “สีเดียวกัน”</p>
+    <div class="two">
+      <div class="canvas">
+        <div class="rng" style="margin-bottom:4px">tolerance <input type="range" id="tol" min="0" max="120" value="30" style="width:60%"><b id="tolv" style="font-family:var(--code);font-size:14px">30</b></div>
+        <div class="tol" id="tolrow"></div>
+        <div class="hint" id="tolnote"></div>
+      </div>
+      <div>
+<pre><span class="k">static bool</span> IsSimilar(Rgb a, Rgb b, <span class="k">int</span> tolerance)
+{
+    <span class="k">int</span> dr = a.R - b.R, dg = a.G - b.G, db = a.B - b.B;
+    <span class="k">return</span> dr * dr + dg * dg + db * db &lt;= tolerance * tolerance;
+    <span class="c">// เทียบกำลังสอง เลี่ยง Math.Sqrt ที่เรียกหลายล้านครั้ง</span>
+}</pre>
+        <table style="margin-top:14px">
+          <tbody>
+            <tr><td>tolerance = 0</td><td>ต้องเท่ากันเป๊ะ — ใช้ได้กับภาพ pixel art / ตารางเกม</td></tr>
+            <tr><td>ต่ำเกินไป</td><td>เหลือขอบสีเดิมรอบพื้นที่ (ผลของ anti-aliasing)</td></tr>
+            <tr><td>สูงเกินไป</td><td>สีรั่วข้ามขอบที่ตาเห็นว่าต่างกันชัดเจน</td></tr>
+            <tr><td>เทียบยังไงดีกว่า RGB</td><td>ระยะใน RGB ไม่ตรงกับที่ตาคนรับรู้ — งานที่ต้องการคุณภาพใช้ LAB หรือ ΔE แทน</td></tr>
+            <tr><td>เทียบกับอะไร</td><td><strong>สีของ seed เสมอ</strong> ไม่ใช่สีของช่องก่อนหน้า — ถ้าเทียบกับช่องก่อนหน้า ค่าจะค่อยๆ เลื่อนไปเรื่อยจนเทลามทั้งภาพ (ปัญหา color drift)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8 ============ -->
+  <section id="s8">
+    <h2><span class="no">08</span>ใช้ที่ไหนบ้าง — ไม่ใช่แค่ถังสี</h2>
+    <table>
+      <thead><tr><th>งาน</th><th>อะไรคือ “ช่อง” และ “สีเดียวกัน”</th><th>แบบที่เหมาะ</th></tr></thead>
+      <tbody>
+        <tr><td>ถังสีในโปรแกรมวาดรูป</td><td>พิกเซล · สีใกล้กันภายใน tolerance</td><td>Scanline + 4 ทิศ</td></tr>
+        <tr><td>Minesweeper เปิดช่องว่าง</td><td>ช่องบนกระดาน · ช่องที่ไม่มีระเบิดรอบข้าง (เลข 0)</td><td>BFS/DFS + 8 ทิศ (หยุดลามที่ช่องมีตัวเลข แต่ยังเปิดมันด้วย)</td></tr>
+        <tr><td>เกมแนว match-3 / จับกลุ่มสี</td><td>ช่องบนกริด · ลูกแก้วสีเดียวกัน</td><td>BFS + 4 ทิศ — นับขนาดกลุ่มเพื่อคิดคะแนน</td></tr>
+        <tr><td>Connected component labeling</td><td>พิกเซลในภาพขาวดำ · พิกเซลที่เป็นวัตถุ</td><td>Scanline / two-pass — นับจำนวนวัตถุ, หาพื้นที่แต่ละชิ้น</td></tr>
+        <tr><td>ตรวจว่าเขาวงกตเดินถึงกันไหม</td><td>ช่องทางเดิน · ช่องที่ไม่ใช่กำแพง</td><td>BFS — ได้ระยะทางสั้นสุดมาด้วยถ้านับชั้น</td></tr>
+        <tr><td>เลือกพื้นที่ในแผนที่ / GIS</td><td>เซลล์แรสเตอร์ · ค่าความสูงหรือประเภทพื้นที่ใกล้เคียง</td><td>Scanline + tolerance</td></tr>
+        <tr><td>Magic wand (เลือกอัตโนมัติ)</td><td>พิกเซล · สีใกล้กัน</td><td>Flood fill แต่เก็บผลเป็น mask แทนการทาสีจริง</td></tr>
+      </tbody>
+    </table>
+    <p class="one"><strong>มองอีกมุม:</strong> flood fill คือ BFS/DFS บนกราฟที่ “โหนด” คือช่อง และ “เส้นเชื่อม” คือความเป็นเพื่อนบ้านที่สีตรงกัน — เข้าใจอันนี้แล้วจะเห็นว่าเป็นอัลกอริทึมเดียวกับการหาเส้นทางในเขาวงกต ต่างแค่เงื่อนไขว่าเดินต่อได้เมื่อไร</p>
+  </section>
+
+  <!-- ============ 9 ============ -->
+  <section id="s9">
+    <h2>Checklist ก่อนส่งโค้ด flood fill</h2>
+    <div class="check">
+      <label><input type="checkbox"><span>เช็ค <code>target == newColor</code> แล้ว return ตั้งแต่บรรทัดแรก<small>หัวข้อ 6</small></span></label>
+      <label><input type="checkbox"><span>อ่านสีเป้าหมายครั้งเดียวตอนเริ่ม ไม่อ่านซ้ำระหว่างลูป<small>หัวข้อ 6</small></span></label>
+      <label><input type="checkbox"><span>ทาสี / mark visited ตอน <em>ใส่เข้า</em> container ไม่ใช่ตอนหยิบออก<small>หัวข้อ 4</small></span></label>
+      <label><input type="checkbox"><span>เช็คขอบเขตก่อนอ่านค่าในอาร์เรย์ทุกครั้ง<small>หัวข้อ 1</small></span></label>
+      <label><input type="checkbox"><span>ไม่ใช้ recursion กับพื้นที่ที่อาจใหญ่กว่าไม่กี่พันช่อง<small>หัวข้อ 4</small></span></label>
+      <label><input type="checkbox"><span>เลือก 4 ทิศหรือ 8 ทิศอย่างตั้งใจ และตรงกับที่ผู้ใช้คาดหวัง<small>หัวข้อ 3</small></span></label>
+      <label><input type="checkbox"><span>ถ้าเป็นภาพจริง มี tolerance และเทียบกับสีของ seed เสมอ<small>หัวข้อ 7</small></span></label>
+      <label><input type="checkbox"><span>ทดสอบเคสขอบ: คลิกบนกำแพง, คลิกช่องเดียวโดดๆ, เทพื้นที่ทั้งภาพ, กริดขนาด 1×1<small>ทั่วไป</small></span></label>
+      <label><input type="checkbox"><span>งานบนภาพใหญ่ไม่รันบน UI thread<small>หัวข้อ 6</small></span></label>
+    </div>
+  </section>
+
+  <footer>Flood fill เป็นอัลกอริทึมที่เขียนได้ใน 8 บรรทัด แต่เขียนให้ถูกต้องและไม่ล่มต้องเข้าใจสามเรื่อง: หยุดเมื่อไร, ใครถูก mark ว่าเยี่ยมชมแล้วตอนไหน, และหน่วยความจำจะบวมตรงไหน</footer>
+</main>
+
+<script>
+(function(){
+  const W = 26, H = 16;
+  const EMPTY = 0, WALL = 1, OTHER = 2, FILL = 3;
+
+  const DIRS4 = [[1,0],[-1,0],[0,1],[0,-1]];
+  const DIRS8 = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+
+  let leakOpen = false, algo = "bfs", conn = 4;
+  let base = null, work = null, steps = [], idx = -1, timer = null, seed = null;
+
+  function buildBase(){
+    const g = Array.from({length:H}, () => Array(W).fill(EMPTY));
+    const outline = (x0,y0,x1,y1) => {
+      for (let x=x0;x<=x1;x++){ g[y0][x]=WALL; g[y1][x]=WALL; }
+      for (let y=y0;y<=y1;y++){ g[y][x0]=WALL; g[y][x1]=WALL; }
+    };
+    outline(2,2,12,13);                      // ห้องซ้าย — ผนังตรง ปิดสนิท
+    for (let y=5;y<=10;y++) g[y][7]=WALL;    // กำแพงแบ่งกลางห้อง (ไม่ชนบน-ล่าง)
+
+    // ห้องเพชร — ผนังเป็นเส้นทแยง ช่องผนังแตะกันแค่ที่มุม
+    const cx=19, cy=5, r=3;
+    for (let y=0;y<H;y++) for (let x=0;x<W;x++)
+      if (Math.abs(x-cx) + Math.abs(y-cy) === r) g[y][x] = WALL;
+
+    for (let y=11;y<=14;y++) for (let x=16;x<=22;x++) g[y][x]=OTHER;  // พื้นที่สีอื่น
+    if (leakOpen) g[13][7] = EMPTY;          // รูรั่วขนาด 1 ช่องที่ผนังล่างของห้องซ้าย
+    return g;
+  }
+
+  // ---------- engine ----------
+  function simulate(a, c, sx, sy, g0){
+    const g = g0.map(r => r.slice());
+    const target = g[sy][sx];
+    const out = { steps:[], filled:0, maxMem:0, target };
+    if (target === FILL) return out;
+    const dirs = (c === 8 ? DIRS8 : DIRS4);
+
+    if (a === "scan"){
+      const st = [[sx,sy]];
+      while (st.length){
+        out.maxMem = Math.max(out.maxMem, st.length);
+        const popped = st.pop();
+        const y = popped[1];
+        let x = popped[0];
+        while (x >= 0 && g[y][x] === target) x--;
+        x++;
+        let up = false, down = false;
+        while (x < W && g[y][x] === target){
+          g[y][x] = FILL; out.filled++;
+          if (y > 0){
+            const m = g[y-1][x] === target;
+            if (m && !up){ st.push([x,y-1]); up = true; } else if (!m) up = false;
+          }
+          if (y < H-1){
+            const m = g[y+1][x] === target;
+            if (m && !down){ st.push([x,y+1]); down = true; } else if (!m) down = false;
+          }
+          out.steps.push({ x:x, y:y, front: st.map(p => p.slice()), filled: out.filled });
+          out.maxMem = Math.max(out.maxMem, st.length);
+          x++;
+        }
+      }
+      return out;
+    }
+
+    const cont = [[sx,sy]];
+    g[sy][sx] = FILL; out.filled = 1;
+    const order = (a === "rec") ? dirs.slice().reverse() : dirs;
+    out.steps.push({ x:sx, y:sy, front:[[sx,sy]], filled:1 });
+    while (cont.length){
+      out.maxMem = Math.max(out.maxMem, cont.length);
+      const cell = (a === "bfs") ? cont.shift() : cont.pop();
+      const x = cell[0], y = cell[1];
+      for (const d of order){
+        const nx = x+d[0], ny = y+d[1];
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+        if (g[ny][nx] !== target) continue;
+        g[ny][nx] = FILL; out.filled++;
+        cont.push([nx,ny]);
+        out.steps.push({ x:nx, y:ny, front: cont.map(p => p.slice()), filled: out.filled });
+        out.maxMem = Math.max(out.maxMem, cont.length);
+      }
+    }
+    return out;
+  }
+
+  // ---------- board ----------
+  const board = document.getElementById("board");
+  board.style.gridTemplateColumns = "repeat(" + W + ", 1fr)";
+  const cells = [];
+  for (let y=0;y<H;y++){
+    const row = [];
+    for (let x=0;x<W;x++){
+      const d = document.createElement("div");
+      d.className = "cell";
+      (function(cx,cy){ d.addEventListener("click", function(){ start(cx,cy); }); })(x,y);
+      board.appendChild(d); row.push(d);
+    }
+    cells.push(row);
+  }
+
+  function render(){
+    const step = idx >= 0 ? steps[idx] : null;
+    const front = new Set((step ? step.front : []).map(p => p[0] + "," + p[1]));
+    for (let y=0;y<H;y++) for (let x=0;x<W;x++){
+      const d = cells[y][x];
+      let cl = "cell";
+      const v = work[y][x];
+      if (v === WALL) cl += " w"; else if (v === OTHER) cl += " o"; else if (v === FILL) cl += " f";
+      if (front.has(x+","+y)) cl += " q";
+      if (step && step.x === x && step.y === y) cl += " cur";
+      if (seed && seed[0] === x && seed[1] === y) cl += " seed";
+      d.className = cl;
+    }
+    const q = step ? step.front.length : 0;
+    document.getElementById("st-step").textContent = idx + 1;
+    document.getElementById("st-fill").textContent = step ? step.filled : 0;
+    document.getElementById("st-q").textContent = q;
+    let mx = 0; for (let i=0;i<=idx;i++) mx = Math.max(mx, steps[i].front.length);
+    document.getElementById("st-max").textContent = mx;
+
+    const qi = document.getElementById("q-items");
+    document.getElementById("play").textContent =
+      timer ? "⏸ หยุด" : (atEnd() ? "▶ เล่นอีกครั้ง" : "▶ เล่น");
+    document.getElementById("q-title").textContent =
+      algo === "bfs" ? "คิว (FIFO) — หยิบจากซ้ายสุด"
+      : algo === "scan" ? "สแตกของ seed แต่ละช่วง — หยิบจากขวาสุด"
+      : "สแตก (LIFO) — หยิบจากขวาสุด";
+    if (!step || step.front.length === 0){
+      qi.innerHTML = '<span style="border:0;background:none;color:var(--ink-2)">' +
+        (idx >= 0 ? "ว่างแล้ว — จบการเท" : "ยังไม่เริ่ม — คลิกบนตารางก่อน") + "</span>";
+    } else {
+      const f = step.front, nextIdx = (algo === "bfs") ? 0 : f.length - 1;
+      const head = f.length > 14;
+      const list = head ? f.slice(0, 7).concat([null]).concat(f.slice(-6)) : f;
+      qi.innerHTML = list.map(function(p,i){
+        if (p === null) return '<span style="border:0;background:none;color:var(--ink-2)">… อีก ' + (f.length-13) + ' ช่อง …</span>';
+        const realIdx = head ? (i < 7 ? i : f.length - (list.length - i)) : i;
+        return '<span class="' + (realIdx === nextIdx ? "next" : "") + '">' + p[0] + "," + p[1] + "</span>";
+      }).join("");
+    }
+  }
+
+  const EXPL = {
+    bfs: "<b>BFS — คิว (FIFO)</b>หยิบช่องที่เข้าคิวก่อนออกก่อน สีจึงลามออกเป็นวงรอบจุดคลิกอย่างสม่ำเสมอ ช่องสีส้มจะเรียงเป็นแนวโค้งล้อมรอบพื้นที่ที่เทแล้ว — นี่คือ “เส้นรอบวง” ที่กินหน่วยความจำ",
+    dfs: "<b>DFS — สแตก (LIFO)</b>หยิบช่องที่เพิ่งใส่ล่าสุด สีจึงพุ่งไปทางเดียวจนสุดแล้วค่อยย้อนกลับมาแตกแขนง ช่องสีส้มจะเป็นเส้นยาวบางๆ ตามทางที่ยังไม่ได้ย้อนไปเก็บ",
+    rec: "<b>DFS — recursion</b>ลำดับเหมือนสแตกทุกประการ ต่างกันแค่ใช้ call stack ของภาษาแทน container ของเรา ความลึกของ stack ≈ ความยาวเส้นทางที่พุ่งไป ซึ่งในภาพใหญ่คือที่มาของ StackOverflow",
+    scan: "<b>Scanline</b>ไม่ทำทีละช่อง แต่กวาดทีละ “ช่วงในแถว” จนสุดทั้งสองข้าง แล้วใส่ seed เฉพาะช่องแรกของช่วงใหม่ในแถวบน/ล่าง สังเกตว่าช่องสีส้มมีน้อยมากเมื่อเทียบกับอีกสามแบบ"
+  };
+
+  function start(x,y){
+    stop();
+    if (base[y][x] === WALL){
+      document.getElementById("expl").innerHTML = "<b>คลิกโดนกำแพง</b>ช่องกำแพงไม่ใช่สีเป้าหมายที่เทได้ — ลองคลิกช่องสีขาวหรือสีเขียว";
+      return;
+    }
+    seed = [x,y];
+    work = base.map(r => r.slice());
+    const r = simulate(algo, algo === "scan" ? 4 : conn, x, y, base);
+    steps = r.steps; idx = -1;
+    document.getElementById("expl").innerHTML = EXPL[algo] +
+      (algo === "scan" && conn === 8 ? "<br><span style='color:var(--cur)'>Scanline ทำงานแบบ 4 ทิศเสมอ — ค่า 8 ทิศถูกละไว้</span>" : "");
+    updateCmp(x,y);
+    render();
+  }
+
+  function stepFwd(){
+    if (idx >= steps.length - 1){ stop(); return false; }
+    idx++;
+    const s = steps[idx];
+    work[s.y][s.x] = FILL;
+    render();
+    return true;
+  }
+
+  function atEnd(){ return steps.length > 0 && idx >= steps.length - 1; }
+
+  function stop(){
+    if (timer){ clearInterval(timer); timer = null; }
+    render();
+  }
+
+  // เทจนจบแล้วกดเล่น/ก้าวอีกครั้ง → ย้อนกลับไปเริ่มใหม่จากจุดเดิม
+  function rewindIfDone(){
+    if (!atEnd()) return;
+    idx = -1;
+    work = base.map(r => r.slice());
+    render();
+  }
+
+  document.getElementById("step").addEventListener("click", function(){
+    if (!steps.length) return;
+    rewindIfDone();
+    stepFwd();
+  });
+  document.getElementById("play").addEventListener("click", function(){
+    if (!steps.length) return;
+    if (timer){ stop(); return; }
+    rewindIfDone();
+    document.getElementById("play").textContent = "⏸ หยุด";
+    const delay = Math.max(8, 620 / (+document.getElementById("speed").value));
+    timer = setInterval(function(){ if (!stepFwd()) stop(); }, delay);
+  });
+  document.getElementById("speed").addEventListener("input", function(){
+    if (timer){ stop(); document.getElementById("play").click(); }
+  });
+  document.getElementById("reset").addEventListener("click", function(){
+    stop(); seed = null; steps = []; idx = -1; work = base.map(r => r.slice());
+    document.getElementById("expl").innerHTML = "<b>ล้างแล้ว</b>คลิกช่องในตารางเพื่อเริ่มใหม่";
+    render();
+  });
+
+  document.querySelectorAll("[data-algo]").forEach(function(b){ b.addEventListener("click", function(){
+    algo = b.dataset.algo;
+    document.querySelectorAll("[data-algo]").forEach(function(x){ x.setAttribute("aria-pressed", x === b); });
+    if (seed) start(seed[0], seed[1]); else document.getElementById("expl").innerHTML = EXPL[algo];
+  }); });
+  document.querySelectorAll("[data-conn]").forEach(function(b){ b.addEventListener("click", function(){
+    conn = +b.dataset.conn;
+    document.querySelectorAll("[data-conn]").forEach(function(x){ x.setAttribute("aria-pressed", x === b); });
+    if (seed) start(seed[0], seed[1]);
+  }); });
+  document.getElementById("leak").addEventListener("click", function(){
+    leakOpen = !leakOpen;
+    this.setAttribute("aria-pressed", leakOpen);
+    this.textContent = leakOpen ? "ปิดรูรั่ว" : "เจาะรูรั่ว";
+    base = buildBase();
+    if (seed) start(seed[0], seed[1]);
+    else { work = base.map(r => r.slice()); render(); }
+  });
+
+  // ---------- comparison table ----------
+  const SHAPE = { bfs:"ลามเป็นวงรอบจุดคลิก", dfs:"พุ่งเป็นเส้นยาวแล้วย้อนกลับ", rec:"เหมือน DFS แต่ใช้ call stack ของภาษา", scan:"กวาดทีละช่วงในแถว" };
+  const NAME  = { bfs:"BFS (คิว)", dfs:"DFS (สแตก)", rec:"DFS (recursion)", scan:"Scanline" };
+  function updateCmp(x,y){
+    const tb = document.querySelector("#cmp tbody");
+    tb.innerHTML = ["bfs","dfs","rec","scan"].map(function(a){
+      const r = simulate(a, a === "scan" ? 4 : conn, x, y, base);
+      const mem = a === "rec" ? r.maxMem + " (ความลึก call stack)" : r.maxMem;
+      return '<tr><td>' + NAME[a] + '</td><td class="num">' + r.filled + '</td><td class="num">' + r.steps.length +
+             '</td><td class="num">' + mem + '</td><td style="font-weight:400;color:var(--ink-2)">' + SHAPE[a] + '</td></tr>';
+    }).join("") +
+    '<tr><td colspan="5" style="font-weight:400;color:var(--ink-2);font-size:13.5px">จุดเริ่ม (' + x + ', ' + y + ') · เพื่อนบ้าน ' + conn + ' ทิศ · ทุกแบบเทได้ช่องเท่ากัน ต่างกันที่จำนวนก้าวและหน่วยความจำสูงสุด</td></tr>';
+  }
+
+  // ---------- tolerance demo ----------
+  const shades = [242, 238, 231, 224, 212, 198, 176, 150, 120, 92, 64, 40];
+  const tolRow = document.getElementById("tolrow");
+  shades.forEach(function(v,i){
+    const d = document.createElement("div");
+    d.style.background = "rgb(" + v + "," + v + "," + v + ")";
+    d.textContent = v;
+    d.style.color = v > 140 ? "#4A5A6E" : "#fff";
+    if (i === 0) d.classList.add("seed");
+    tolRow.appendChild(d);
+  });
+  function tolUpdate(){
+    const t = +document.getElementById("tol").value;
+    document.getElementById("tolv").textContent = t;
+    const seedV = shades[0];
+    let n = 0, firstMiss = -1;
+    Array.prototype.forEach.call(tolRow.children, function(d,i){
+      const diff = Math.abs(shades[i] - seedV);
+      const m = diff <= t;
+      d.classList.toggle("match", m);
+      if (m) n++; else if (firstMiss < 0) firstMiss = i;
+    });
+    document.getElementById("tolnote").innerHTML =
+      "ช่องซ้ายสุด (ขอบแดง) คือสีของ seed = " + seedV + " · ที่ tolerance " + t + " มี <b>" + n + " จาก 12</b> ช่องที่นับว่า “สีเดียวกัน”" +
+      (firstMiss > 0 ? " — การเทจะหยุดที่ช่องที่ " + (firstMiss+1) + " (ค่า " + shades[firstMiss] + ", ต่างกัน " + Math.abs(shades[firstMiss]-seedV) + ")" : "") +
+      (t === 0 ? " · tolerance 0 = ต้องเท่ากันเป๊ะ เทได้ช่องเดียว" : "");
+  }
+  document.getElementById("tol").addEventListener("input", tolUpdate);
+
+  // ---------- init ----------
+  base = buildBase();
+  work = base.map(r => r.slice());
+  render();
+  tolUpdate();
+})();
+</script>
+</body>
+</html>
