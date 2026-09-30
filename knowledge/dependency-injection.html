@@ -1,1 +1,909 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dependency Injection — ใครสร้างของให้ใคร และมีชีวิตอยู่นานแค่ไหน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF2F5; --grid:rgba(27,42,65,.08);
+    --ink:#1B2A41; --ink-2:#4A5A6E; --line:#B9C4D0;
+    --sing:#7B4FA0;   /* Singleton */
+    --scop:#1E6FB8;   /* Scoped */
+    --tran:#2E7D4F;   /* Transient */
+    --cont:#33465C;   /* container */
+    --bad:#C8503A; --warn:#D08A1E; --ok:#2E7D4F;
+    --hi:#FFD966; --radius:6px;
+    --font:"IBM Plex Sans Thai",system-ui,sans-serif;
+    --code:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);color:var(--ink);background:var(--paper);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:24px 24px;line-height:1.7;font-size:17px}
+  main{max-width:1160px;margin:0 auto;padding:40px 24px 96px}
+  h1,h2,h3{line-height:1.25;margin:0}
+  h1{font-size:clamp(30px,4.6vw,48px);font-weight:700;letter-spacing:-.01em}
+  h2{font-size:clamp(22px,2.8vw,30px);font-weight:700;margin-bottom:6px}
+  h2 .no{font-family:var(--code);font-weight:400;font-size:.6em;color:var(--ink-2);margin-right:10px;vertical-align:middle}
+  h3{font-size:18px;font-weight:600}
+  p{margin:0 0 12px;max-width:64ch}
+  .lead{font-size:19px;color:var(--ink-2);max-width:62ch}
+  section{margin-top:80px}
+  code{font-family:var(--code);font-size:.9em;background:#fff;border:1px solid var(--line);padding:1px 6px;border-radius:4px}
+  pre{font-family:var(--code);font-size:12.5px;line-height:1.55;background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:14px 16px;overflow-x:auto;margin:0;color:var(--ink)}
+  pre .c{color:var(--ink-2);font-style:italic} pre .k{color:var(--sing);font-weight:500} pre .s{color:var(--ok)} pre .t{color:var(--scop)}
+  pre.bad{border-color:var(--bad);border-left-width:6px} pre.good{border-color:var(--ok);border-left-width:6px}
+  .tag{display:inline-block;font-family:var(--code);font-size:11px;padding:1px 8px;border-radius:4px;color:#fff;margin-bottom:6px}
+  .tag.bad{background:var(--bad)} .tag.good{background:var(--ok)}
+  .one{font-size:15px;color:var(--ink-2);border-left:3px solid var(--hi);background:#fff;padding:10px 14px;border-radius:0 var(--radius) var(--radius) 0;margin-top:16px;max-width:none}
+  .one strong{color:var(--ink)}
+  .alert{font-size:15px;border:1.5px solid var(--bad);border-left-width:6px;background:#FFF4F1;padding:12px 16px;border-radius:var(--radius);margin-top:18px}
+  .alert strong{color:var(--bad)}
+  nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  nav a{font-size:14px;text-decoration:none;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:5px 14px}
+  nav a:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  @media (max-width:900px){.two{grid-template-columns:1fr}}
+  .canvas{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:22px;position:relative;box-shadow:6px 6px 0 rgba(27,42,65,.12)}
+
+  /* generic node box */
+  .bx{border:2px solid var(--ink);border-radius:var(--radius);background:#fff;padding:8px 10px;font-size:13px;line-height:1.4}
+  .bx b{display:block;font-family:var(--code);font-weight:500;font-size:12.5px}
+  .bx small{display:block;color:var(--ink-2);font-size:11.5px}
+
+  /* object graph */
+  .graph{display:flex;flex-direction:column;gap:0;align-items:flex-start}
+  .lvl{display:flex;align-items:center;gap:8px;width:100%}
+  .lvl .ind{flex:none}
+  .gnode{border:2px solid var(--cont);border-radius:var(--radius);background:#fff;padding:7px 11px;font-family:var(--code);font-size:12.5px;position:relative;transition:box-shadow .25s,opacity .25s;flex:none}
+  .gnode small{font-family:var(--font);color:var(--ink-2);font-size:11px;margin-left:6px}
+  .gnode.on{box-shadow:0 0 0 4px var(--hi)}
+  .gnode.dim{opacity:.35}
+  .gnode.leaf{border-color:var(--line)}
+  .drop{font-family:var(--code);font-size:11px;color:var(--ink-2);padding:2px 0 2px 0}
+  .ord{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;font-family:var(--code);font-size:11.5px}
+  .ord span{border:1.5px solid var(--line);border-radius:999px;padding:1px 9px;background:#fff;transition:background .25s,color .25s,border-color .25s}
+  .ord span.on{background:var(--cont);border-color:var(--cont);color:#fff}
+
+  /* lifetime sim */
+  .pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+  .pick button{font-family:var(--font);font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:6px 15px;cursor:pointer}
+  .pick button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+  .pick button[data-lt=singleton][aria-pressed=true]{background:var(--sing);border-color:var(--sing);color:#fff}
+  .pick button[data-lt=scoped][aria-pressed=true]{background:var(--scop);border-color:var(--scop);color:#fff}
+  .pick button[data-lt=transient][aria-pressed=true]{background:var(--tran);border-color:var(--tran);color:#fff}
+  .pick .grp{font-family:var(--code);font-size:12.5px;color:var(--ink-2);margin-right:2px}
+
+  .reqs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media (max-width:700px){.reqs{grid-template-columns:1fr}}
+  .req{border:2px dashed var(--ink-2);border-radius:8px;padding:12px;position:relative;background:#fff}
+  .req::before{content:attr(data-l);position:absolute;top:-10px;left:12px;background:#fff;font-family:var(--code);font-size:10.5px;color:var(--ink-2);padding:0 7px}
+  .req h4{margin:0 0 10px;font-size:13px;font-family:var(--code);font-weight:500;color:var(--ink-2)}
+  .cons{display:flex;flex-direction:column;gap:8px}
+  .con{border:1.5px solid var(--line);border-radius:var(--radius);padding:7px 10px;font-size:13px;background:#fff;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .con .who{font-family:var(--code);font-size:12px}
+  .inst{font-family:var(--code);font-size:11.5px;border-radius:4px;padding:2px 8px;color:#fff;white-space:nowrap;transition:background .25s}
+  .inst.singleton{background:var(--sing)} .inst.scoped{background:var(--scop)} .inst.transient{background:var(--tran)}
+  .appbox{border:2px solid var(--sing);border-radius:8px;padding:10px 12px;margin-top:14px;background:#F7F2FA;font-size:13px;position:relative}
+  .appbox::before{content:"อยู่นอก request — ตลอดอายุแอป";position:absolute;top:-10px;left:12px;background:#fff;font-family:var(--code);font-size:10.5px;color:var(--sing);padding:0 7px}
+  .tot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+  @media (max-width:560px){.tot{grid-template-columns:1fr}}
+  .stat{border:1.5px solid var(--line);border-radius:var(--radius);padding:7px 11px;background:#fff}
+  .stat small{display:block;color:var(--ink-2);font-size:11.5px}
+  .stat b{font-family:var(--code);font-weight:500;font-size:17px}
+  .verdict{margin-top:14px;font-size:14.5px;background:#FFFBEA;border-left:3px solid var(--hi);padding:10px 14px;border-radius:0 var(--radius) var(--radius) 0;min-height:96px}
+  .verdict b{display:block;margin-bottom:2px}
+  .verdict .warnrow{color:var(--bad);margin-top:6px;display:block}
+  .verdict .okrow{color:var(--ok);margin-top:6px;display:block}
+
+  /* captive */
+  .cap{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-top:10px}
+  .cap .bx{flex:none}
+  .cap .arr{font-family:var(--code);font-size:11px;color:var(--ink-2);padding:0 10px}
+  .bx.sing{border-color:var(--sing)} .bx.sing b{color:var(--sing)}
+  .bx.scop{border-color:var(--scop)} .bx.scop b{color:var(--scop)}
+  .bx.tran{border-color:var(--tran)} .bx.tran b{color:var(--tran)}
+  .matrix td.y{color:var(--ok);font-weight:600} .matrix td.n{color:var(--bad);font-weight:600} .matrix td.w{color:var(--warn);font-weight:600}
+
+  /* analogy panels */
+  .an{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:820px){.an{grid-template-columns:1fr}}
+  .pan{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:16px 18px;box-shadow:6px 6px 0 rgba(27,42,65,.10)}
+  .pan.no{border-top:7px solid var(--bad)} .pan.yes{border-top:7px solid var(--ok)}
+  .pan h3{font-size:16px;margin-bottom:2px}
+  .pan.no h3{color:var(--bad)} .pan.yes h3{color:var(--ok)}
+  .pan .sub{font-size:13px;color:var(--ink-2);margin-bottom:12px}
+  .pan .stage{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:13px}
+  .pan .who{border:2px solid var(--ink);border-radius:var(--radius);background:#fff;padding:8px 14px;text-align:center;width:100%}
+  .pan .who b{display:block;font-family:var(--code);font-size:12.5px}
+  .pan .who small{display:block;color:var(--ink-2);font-size:11.5px}
+  .pan .who.chef{border-color:var(--cont)} .pan .who.chef b{color:var(--cont)}
+  .pan .who.buy{border-color:var(--ok)} .pan .who.buy b{color:var(--ok)}
+  .pan .a{color:var(--ink-2);font-family:var(--code);font-size:11px}
+  .pan .a.bad{color:var(--bad)}
+  .pan .srcs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%}
+  .pan .srcs div{border:1.5px dashed var(--line);border-radius:4px;padding:6px 4px;text-align:center;font-family:var(--code);font-size:11px;color:var(--ink-2)}
+  .pan .out{font-size:13.5px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);color:var(--ink-2)}
+  .pan .out b{color:var(--ink)}
+
+  /* three cards */
+  .c3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:900px){.c3{grid-template-columns:1fr}}
+  .cc{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:15px 17px}
+  .cc h3{font-size:16px;margin-bottom:8px}
+  .cc.good{border-top:6px solid var(--ok)} .cc.good h3{color:var(--ok)}
+  .cc.cost{border-top:6px solid var(--warn)} .cc.cost h3{color:var(--warn)}
+  .cc.when{border-top:6px solid var(--scop)} .cc.when h3{color:var(--scop)}
+  .cc ul{margin:0;padding-left:18px;font-size:14px}
+  .cc li{margin-bottom:7px}
+  .cc li b{font-weight:600}
+  .cc .hr{border-top:1px dashed var(--line);margin:10px 0 8px}
+  .cc .lbl{font-family:var(--code);font-size:11px;color:var(--ink-2);margin-bottom:4px}
+
+  /* numbered steps in the mini example */
+  .stepnum{display:inline-block;font-family:var(--code);font-size:11px;background:var(--cont);color:#fff;border-radius:999px;padding:1px 9px;margin-bottom:6px}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+  th{background:#F3F6F9;font-weight:600}
+  tr:last-child td{border-bottom:0}
+  td:first-child{font-weight:600;width:20%;color:var(--ink-2)}
+  td code{font-size:12px}
+  th.sing{color:var(--sing)} th.scop{color:var(--scop)} th.tran{color:var(--tran)}
+  .yes{color:var(--ok);font-weight:600} .no{color:var(--bad);font-weight:600} .mid{color:var(--warn);font-weight:600}
+  @media (max-width:640px){table,thead,tbody,tr,th,td{display:block}thead{display:none}td{border-bottom:0;padding:5px 12px}td:first-child{padding-top:14px;color:var(--ink)}tr{border-bottom:1px solid var(--line);padding-bottom:10px}}
+
+  /* checklist */
+  .check{background:#fff;border:1.5px solid var(--ink);border-radius:var(--radius);padding:6px 18px}
+  .check label{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px;cursor:pointer}
+  .check label:last-child{border-bottom:0}
+  .check input{margin-top:6px;accent-color:var(--ok);width:16px;height:16px;flex:none}
+  .check small{display:block;color:var(--ink-2);font-size:13px}
+  footer{margin-top:64px;font-size:14px;color:var(--ink-2)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <h1>Dependency Injection<br>ใครสร้างของให้ใคร และของนั้นมีชีวิตอยู่นานแค่ไหน</h1>
+    <p class="lead">DI ตอบคำถามเดียว: <strong>คลาสหนึ่งได้ของที่มันต้องใช้มาจากไหน</strong> — สร้างเองด้วย <code>new</code> หรือมีคนยื่นให้ทางประตูหน้า (constructor) และถ้ามีคนยื่นให้ คนนั้นคือใคร เขาสร้างของเมื่อไร และเก็บไว้ใช้ซ้ำนานแค่ไหน คำถามข้อสุดท้ายคือเรื่อง <em>lifetime</em> ซึ่งเป็นจุดที่พลาดกันมากที่สุดใน .NET</p>
+    <nav aria-label="หัวข้อ">
+      <a href="#s0">0 เข้าใจใน 1 นาที</a><a href="#s1">1 ปัญหาของ new</a><a href="#s2">2 หลักการ</a><a href="#s3">3 Container สร้างของอย่างไร</a><a href="#s4">4 Lifetime (ลองเล่น)</a><a href="#s5">5 Captive dependency</a><a href="#s6">6 Background job</a><a href="#s7">7 กับดักอื่น</a><a href="#s8">8 ทำให้เทสง่ายขึ้น</a><a href="#s9">9 ท่าที่ใช้บ่อย</a><a href="#s10">Checklist</a>
+    </nav>
+  </header>
+
+  <!-- ============ 0 ============ -->
+  <section id="s0" style="margin-top:44px">
+    <h2><span class="no">00</span>เข้าใจใน 1 นาที — ใช้ทำอะไร ได้อะไร เสียอะไร</h2>
+    <p class="lead">ลองคิดถึงครัวร้านอาหาร เชฟมีหน้าที่ทำอาหาร แต่วัตถุดิบมาจากไหน — เชฟออกไปซื้อเองทุกเช้า หรือมีฝ่ายจัดซื้อส่งมาถึงหลังครัว นี่คือคำถามเดียวกับที่ DI ตอบ</p>
+    <div class="an">
+      <div class="pan no">
+        <h3>ไม่มี DI — เชฟไปซื้อของเอง</h3>
+        <div class="sub">เชฟต้องรู้จักตลาด รู้จัก supplier และออกไปซื้อเองก่อนเริ่มทำอาหาร</div>
+        <div class="stage">
+          <div class="who chef"><b>เชฟ</b><small>ทำอาหาร + ต้องรู้เรื่องจัดซื้อด้วย</small></div>
+          <div class="a bad">↓ ออกไปหาของเอง (<code>new</code>)</div>
+          <div class="srcs"><div>ตลาด</div><div>ฟาร์ม</div><div>โรงงาน</div></div>
+        </div>
+        <div class="out">
+          <b>ผลที่ตามมา:</b> เปลี่ยน supplier = ต้องสอนเชฟใหม่ · ตลาดปิด = เชฟทำอาหารไม่ได้เลย ·
+          จะซ้อมสูตรใหม่ก็ต้องซื้อของจริงทุกครั้ง
+        </div>
+      </div>
+      <div class="pan yes">
+        <h3>มี DI — มีคนส่งของถึงหลังครัว</h3>
+        <div class="sub">เชฟบอกแค่ว่า “ต้องใช้อะไร” แล้วมีของมาวางให้ ไม่ต้องรู้ว่ามาจากไหน</div>
+        <div class="stage">
+          <div class="who buy"><b>ฝ่ายจัดซื้อ</b><small>รู้ว่าของแต่ละอย่างซื้อจากไหน — ที่เดียวในร้าน</small></div>
+          <div class="a">↓ ส่งของตามใบสั่ง</div>
+          <div class="who chef"><b>เชฟ</b><small>รับของแล้วทำอาหาร จบ</small></div>
+        </div>
+        <div class="out">
+          <b>ผลที่ตามมา:</b> เปลี่ยน supplier = แก้ที่ฝ่ายจัดซื้อที่เดียว เชฟไม่รู้ตัว ·
+          ซ้อมสูตรใช้วัตถุดิบปลอมได้ · อ่านใบสั่งของก็รู้ทันทีว่าเมนูนี้ใช้อะไร
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:26px">อุปมาแมปกับโค้ดตรงไหน</h3>
+    <table style="margin-top:10px">
+      <thead><tr><th>ในครัว</th><th>ในโค้ด</th></tr></thead>
+      <tbody>
+        <tr><td>เชฟ</td><td>คลาสที่ทำงานจริง เช่น <code>OrderNotifier</code></td></tr>
+        <tr><td>วัตถุดิบที่ต้องใช้</td><td>dependency — <code>IMessenger</code>, <code>IOrderRepository</code></td></tr>
+        <tr><td>เชฟออกไปซื้อเอง</td><td><code>new SmtpClient(...)</code> เขียนไว้ข้างในคลาส</td></tr>
+        <tr><td>ใบสั่งของที่เชฟเขียนไว้</td><td>พารามิเตอร์ของ constructor — อ่านแล้วรู้ว่าคลาสนี้ขาดอะไรไม่ได้</td></tr>
+        <tr><td>ฝ่ายจัดซื้อ</td><td>DI container (<code>IServiceProvider</code>) — ยื่นของให้ตาม constructor</td></tr>
+        <tr><td>สมุดว่าของแต่ละอย่างซื้อจากใคร</td><td><code>Program.cs</code> — จุดเดียวที่รู้ว่า “ของจริง” คืออะไร</td></tr>
+        <tr><td>ซ้อมสูตรด้วยวัตถุดิบปลอม</td><td>unit test ที่ยื่น fake / mock ให้</td></tr>
+        <tr><td>ของสดใช้วันเดียวทิ้ง ↔ ของแห้งเก็บได้นาน</td><td><strong>lifetime</strong> — Scoped ตายพร้อม request, Singleton อยู่ตลอดอายุแอป (หัวข้อ 4)</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:30px">ตัวอย่างสั้นที่สุด — แจ้งเตือนลูกค้าเมื่อสั่งซื้อสำเร็จ</h3>
+    <p class="lead" style="font-size:16px">อ่าน 4 ขั้นนี้ให้จบ แล้วจะเห็นประโยชน์ทั้งหมดของ DI ในหน้าเดียว</p>
+    <div class="two">
+      <div>
+        <span class="stepnum">ขั้น 1</span>
+        <span class="tag bad" style="margin-left:6px">ไม่มี DI — ส่งได้แค่อีเมล และเทสไม่ได้</span>
+<pre class="bad"><span class="k">public class</span> OrderNotifier
+{
+    <span class="k">public void</span> Notify(Order o)
+    {
+        <span class="c">// ผูกกับ SMTP ตายตัว: ส่งอีเมลจริงทุกครั้งที่เรียก method นี้</span>
+        <span class="k">var</span> smtp = <span class="k">new</span> SmtpClient(<span class="s">"smtp.company.com"</span>);
+        smtp.Send(o.Email, <span class="s">"คำสั่งซื้อสำเร็จ"</span>);
+    }
+}</pre>
+
+        <span class="stepnum" style="margin-top:16px">ขั้น 2</span>
+        <span class="tag good" style="margin-left:6px">บอกแค่ความต้องการ ไม่ระบุวิธี</span>
+<pre class="good"><span class="c">// "ใครก็ได้ที่ส่งข้อความได้" — ไม่สนว่าเป็นอีเมล, LINE หรือ SMS</span>
+<span class="k">public interface</span> IMessenger
+{
+    Task SendAsync(<span class="k">string</span> to, <span class="k">string</span> text, CancellationToken ct);
+}
+
+<span class="k">public class</span> OrderNotifier(IMessenger messenger)      <span class="c">// ← ใบสั่งของ</span>
+{
+    <span class="k">public</span> Task Notify(Order o, CancellationToken ct) =&gt;
+        messenger.SendAsync(o.Email, <span class="s">"คำสั่งซื้อสำเร็จ"</span>, ct);
+}</pre>
+      </div>
+      <div>
+        <span class="stepnum">ขั้น 3</span>
+        <span class="tag good" style="margin-left:6px">ตัดสินใจว่า “ของจริง” คืออะไร — ที่เดียว</span>
+<pre class="good"><span class="c">// Program.cs</span>
+builder.Services.AddScoped&lt;IMessenger, EmailMessenger&gt;();
+
+<span class="c">// พรุ่งนี้ลูกค้าอยากได้ LINE แทน → แก้บรรทัดนี้บรรทัดเดียว</span>
+<span class="c">// builder.Services.AddScoped&lt;IMessenger, LineMessenger&gt;();</span>
+<span class="c">//   OrderNotifier ไม่ต้องแก้แม้แต่ตัวอักษรเดียว</span>
+
+<span class="c">// อยากส่งทั้งสองทาง? เขียน class ที่ห่อทั้งคู่ แล้ว register ตัวนั้น</span>
+<span class="c">// builder.Services.AddScoped&lt;IMessenger, MultiChannelMessenger&gt;();</span></pre>
+
+        <span class="stepnum" style="margin-top:16px">ขั้น 4</span>
+        <span class="tag good" style="margin-left:6px">เทสได้โดยไม่ส่งอีเมลจริง</span>
+<pre class="good"><span class="k">public class</span> FakeMessenger : IMessenger
+{
+    <span class="k">public</span> List&lt;(<span class="k">string</span> To, <span class="k">string</span> Text)&gt; Sent { <span class="k">get</span>; } = [];
+    <span class="k">public</span> Task SendAsync(<span class="k">string</span> to, <span class="k">string</span> text, CancellationToken ct)
+    { Sent.Add((to, text)); <span class="k">return</span> Task.CompletedTask; }
+}
+
+[Fact]
+<span class="k">public async</span> Task Notify_SendsToCustomerEmail()
+{
+    <span class="k">var</span> fake = <span class="k">new</span> FakeMessenger();
+    <span class="k">await new</span> OrderNotifier(fake)
+        .Notify(<span class="k">new</span> Order { Email = <span class="s">"somchai@example.com"</span> }, <span class="k">default</span>);
+
+    fake.Sent.Should().ContainSingle(m =&gt; m.To == <span class="s">"somchai@example.com"</span>);
+}</pre>
+      </div>
+    </div>
+    <p class="one"><strong>สังเกตว่าอะไรเปลี่ยนไปจริงๆ:</strong> โค้ดที่ทำงานยังทำงานเหมือนเดิม สิ่งที่ย้ายที่คือ <em>ความรู้ว่า “ของจริง” คืออะไร</em> — จากที่กระจายอยู่ในทุกคลาส กลายเป็นอยู่ที่ <code>Program.cs</code> ที่เดียว และเพราะมันถูกส่งเข้ามาจากข้างนอก เทสจึงส่งของปลอมเข้าไปแทนได้</p>
+
+    <h3 style="margin-top:34px">ได้อะไร เสียอะไร ควรใช้เมื่อไร</h3>
+    <div class="c3" style="margin-top:12px">
+      <div class="cc good">
+        <h3>ได้อะไร</h3>
+        <ul>
+          <li><b>เทสได้จริง</b> — ยื่นของปลอมให้ ไม่ต้องมี DB / SMTP / API ภายนอก</li>
+          <li><b>สลับของได้</b> — เปลี่ยน SQL Server เป็น Postgres, อีเมลเป็น LINE โดยไม่แตะโค้ดธุรกิจ</li>
+          <li><b>อ่านแล้วรู้</b> — constructor บอกครบว่าคลาสนี้พึ่งอะไร ไม่ต้องไล่อ่านทั้งไฟล์</li>
+          <li><b>จัดการอายุของ object ให้</b> — เปิด/ปิด connection, dispose ตอนจบ request ให้อัตโนมัติ</li>
+          <li><b>ประกอบที่เดียว</b> — อยากรู้ว่าระบบใช้อะไรอยู่ เปิดไฟล์เดียวจบ</li>
+        </ul>
+      </div>
+      <div class="cc cost">
+        <h3>เสียอะไร</h3>
+        <ul>
+          <li><b>อ้อมขึ้น</b> — เห็น <code>IMessenger</code> แล้วต้องไปดู <code>Program.cs</code> ว่าตัวจริงคืออะไร (IDE กด F12 ไปไม่ถึงทันที)</li>
+          <li><b>ไฟล์เยอะขึ้น</b> — ได้ interface เพิ่มมาต่อหนึ่ง service</li>
+          <li><b>พังตอน runtime ได้</b> — ลืม register แล้ว compiler ไม่เตือน (แก้ด้วย <code>ValidateOnBuild</code> — หัวข้อ 3)</li>
+          <li><b>เรื่อง lifetime เป็นกับดักใหม่</b> — เลือกผิดแล้วข้อมูลรั่วข้าม request หรือ DbContext บวม (หัวข้อ 4–5)</li>
+          <li><b>ถูกใช้เกิน</b> — ใส่ interface ให้ทุกคลาสทั้งที่มี implementation เดียวและไม่เคย mock</li>
+        </ul>
+      </div>
+      <div class="cc when">
+        <h3>ควรใช้เมื่อไร</h3>
+        <div class="lbl">ควรใช้ — เกือบทุกกรณี</div>
+        <ul>
+          <li>ของชิ้นนั้นแตะ <b>โลกภายนอก</b>: DB, HTTP, ไฟล์, อีเมล, เวลา, สุ่ม</li>
+          <li>อยากเขียนเทสให้ logic ที่เรียกใช้มัน</li>
+          <li>มีหลาย implementation หรืออาจมีในอนาคต</li>
+          <li>ของสร้างแพงและต้องใช้ซ้ำ (connection pool, HttpClient, cache)</li>
+        </ul>
+        <div class="hr"></div>
+        <div class="lbl">ไม่ต้องใช้</div>
+        <ul>
+          <li><b>Value object / DTO / entity</b> — <code>new Order(...)</code> ได้เลย ไม่ต้องผ่าน container</li>
+          <li>ฟังก์ชันคำนวณล้วนที่ไม่แตะอะไรข้างนอก (<code>static</code> ก็พอ)</li>
+          <li>คลาสที่มี implementation เดียว ไม่เคยสลับ และไม่เคย mock — <code>new</code> ตรงๆ อ่านง่ายกว่า</li>
+        </ul>
+      </div>
+    </div>
+    <div class="alert" style="border-color:var(--scop);background:#EEF5FB"><strong style="color:var(--scop)">สำหรับ .NET โดยเฉพาะ:</strong> DI ไม่ใช่ทางเลือก — ASP.NET Core สร้างบนมันทั้งหมด <code>ILogger</code>, <code>IConfiguration</code>, <code>DbContext</code>, controller, middleware ทุกตัวถูกส่งเข้ามาผ่าน container อยู่แล้ว คำถามจึงไม่ใช่ “จะใช้ DI ไหม” แต่เป็น <strong>“จะใช้ให้ถูกไหม”</strong> — โดยเฉพาะเรื่อง lifetime ที่เป็นหัวข้อ 4 ถึง 6 ของหน้านี้</div>
+  </section>
+
+  <!-- ============ 1 ============ -->
+  <section id="s1">
+    <h2><span class="no">01</span>ปัญหาของการ <code>new</code> เอง</h2>
+    <p class="lead">โค้ดสองชุดนี้ทำงานเหมือนกันทุกอย่าง ต่างกันแค่ว่า <code>OrderService</code> รู้จัก "ของจริง" หรือรู้จักแค่ "สัญญา"</p>
+    <div class="two">
+      <div>
+        <span class="tag bad">ผูกกันแน่น — สร้างเองข้างใน</span>
+<pre class="bad"><span class="k">public class</span> OrderService
+{
+    <span class="k">private readonly</span> SqlOrderRepository _repo;
+    <span class="k">private readonly</span> SmtpEmailSender _email;
+
+    <span class="k">public</span> OrderService()
+    {
+        _repo  = <span class="k">new</span> SqlOrderRepository(
+            <span class="s">"Server=prod-db;User=sa;Password=..."</span>);   <span class="c">// ← connection string ฝังในโค้ด</span>
+        _email = <span class="k">new</span> SmtpEmailSender(<span class="s">"smtp.company.com"</span>, 587);
+    }
+
+    <span class="k">public async</span> Task Place(Order o)
+    {
+        <span class="k">await</span> _repo.SaveAsync(o);
+        <span class="k">await</span> _email.SendAsync(o.Email, <span class="s">"ยืนยันคำสั่งซื้อ"</span>);
+    }
+}</pre>
+        <table style="margin-top:12px">
+          <tbody>
+            <tr><td>เทสไม่ได้</td><td>เรียก <code>Place()</code> ในเทส = ยิง DB จริงและส่งอีเมลจริง</td></tr>
+            <tr><td>เปลี่ยนไม่ได้</td><td>อยากสลับไป <code>PostgresOrderRepository</code> หรือส่งผ่าน LINE ต้องแก้ข้างใน <code>OrderService</code></td></tr>
+            <tr><td>ซ่อนของที่ต้องใช้</td><td>อ่าน constructor แล้วไม่รู้ว่าคลาสนี้พึ่งอะไรอยู่ — ต้องไล่อ่านทั้งไฟล์</td></tr>
+            <tr><td>เปลืองทรัพยากร</td><td>ทุกครั้งที่ <code>new OrderService()</code> จะเปิด connection / SMTP client ใหม่</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <span class="tag good">ผูกกันหลวม — รับเข้ามาทางประตูหน้า</span>
+<pre class="good"><span class="c">// รู้จักแค่ interface ไม่รู้ว่าเบื้องหลังเป็น SQL, Postgres หรือ fake</span>
+<span class="k">public class</span> OrderService(
+    IOrderRepository repo,
+    IEmailSender email,
+    ILogger&lt;OrderService&gt; log)          <span class="c">// primary constructor (C# 12)</span>
+{
+    <span class="k">public async</span> Task Place(Order o, CancellationToken ct)
+    {
+        <span class="k">await</span> repo.SaveAsync(o, ct);
+        <span class="k">await</span> email.SendAsync(o.Email, <span class="s">"ยืนยันคำสั่งซื้อ"</span>, ct);
+        log.LogInformation(<span class="s">"placed order {Id}"</span>, o.Id);
+    }
+}
+
+<span class="c">// Program.cs — ที่เดียวที่รู้ว่า "ของจริง" คืออะไร</span>
+builder.Services.AddScoped&lt;IOrderRepository, SqlOrderRepository&gt;();
+builder.Services.AddScoped&lt;IEmailSender, SmtpEmailSender&gt;();
+builder.Services.AddScoped&lt;OrderService&gt;();</pre>
+        <p class="one" style="margin-top:12px"><strong>สิ่งที่เปลี่ยนไปจริงๆ:</strong> ความรู้ว่า "ของจริงคืออะไร" ถูกย้ายออกจากคลาสที่ใช้งาน ไปอยู่ที่ <em>จุดเดียว</em> ตอนสตาร์ตแอป — <code>OrderService</code> เหลือหน้าที่แค่ "ทำงานตามลำดับ" ซึ่งเป็นสิ่งที่มันควรรู้จริงๆ</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section id="s2">
+    <h2><span class="no">02</span>หลักการ — คำสามคำที่มักปนกัน</h2>
+    <div class="two">
+      <div>
+        <table>
+          <tbody>
+            <tr><td>Dependency Injection</td><td><strong>เทคนิค</strong> — ส่งของที่ต้องใช้เข้ามาจากข้างนอก แทนที่จะสร้างเองข้างใน (ทำมือก็ได้ ไม่ต้องมี container)</td></tr>
+            <tr><td>Inversion of Control</td><td><strong>หลักการกว้างๆ</strong> — ยกหน้าที่ควบคุม (สร้างของ, เรียกเมื่อไร) ไปให้ framework แทนที่โค้ดเราจะคุมทุกอย่าง DI เป็น IoC แบบหนึ่ง</td></tr>
+            <tr><td>Dependency Inversion (D ใน SOLID)</td><td><strong>ทิศทางของ reference</strong> — ชั้นบนกับชั้นล่างต่างพึ่ง <em>abstraction</em> ไม่ให้ชั้นบนพึ่งชั้นล่างตรงๆ (นี่คือเหตุผลที่ interface อยู่ชั้น Application ไม่ใช่ Infrastructure)</td></tr>
+            <tr><td>DI Container / IoC Container</td><td><strong>เครื่องมือ</strong> — ตัวที่จำว่า interface ไหนคู่กับ class ไหน แล้วประกอบ object ให้อัตโนมัติ ใน .NET คือ <code>IServiceProvider</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>3 ช่องทางที่ inject ได้</h3>
+        <table style="margin-top:10px">
+          <thead><tr><th>แบบ</th><th>ใช้เมื่อ</th></tr></thead>
+          <tbody>
+            <tr><td>Constructor</td><td><strong>ค่าเริ่มต้นเกือบ 100%</strong> — ของที่ขาดไม่ได้ ประกาศเป็น <code>readonly</code> ได้ และถ้าลืม register แอปจะพังตอนสตาร์ต ไม่ใช่ตอน runtime</td></tr>
+            <tr><td>Method / parameter</td><td>ของที่ใช้แค่ method เดียว — Minimal API และ <code>[FromServices]</code> ใน MVC ใช้แบบนี้</td></tr>
+            <tr><td>Property / setter</td><td>ของที่มีค่า default ใช้ได้อยู่แล้ว (เช่น <code>ILogger</code> ที่ default เป็น <code>NullLogger</code>) — .NET container ในตัวไม่รองรับ ต้องทำเองหรือใช้ container ตัวอื่น <strong>เลี่ยงไว้ก่อน</strong> เพราะซ่อนว่าคลาสพึ่งอะไร</td></tr>
+          </tbody>
+        </table>
+        <p class="one"><strong>กฎข้อเดียวที่จำง่าย:</strong> constructor ของคลาสคือ "ใบแจ้งรายการ" ว่าคลาสนี้ทำงานไม่ได้ถ้าขาดอะไร — อ่าน constructor แล้วต้องรู้ทันทีว่ามันพึ่งอะไรอยู่ ถ้าต้องไปหาในเนื้อ method แปลว่าซ่อนของแล้ว</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section id="s3">
+    <h2><span class="no">03</span>Container สร้างของอย่างไร — object graph</h2>
+    <p class="lead">ตอน request เข้ามา container ไม่ได้สร้างแค่ controller มันไล่ดูว่า controller ขออะไร แล้วของนั้นขออะไรต่อ ลงไปเรื่อยๆ จนถึงตัวที่ไม่ขออะไรอีก แล้วประกอบย้อนขึ้นมา กดดูทีละก้าว</p>
+    <div class="two">
+      <div class="canvas">
+        <div class="pick" style="margin-bottom:14px">
+          <button type="button" id="g-step">▶ ก้าวถัดไป</button>
+          <button type="button" id="g-reset">เริ่มใหม่</button>
+        </div>
+        <div class="graph" id="graph"></div>
+        <div class="ord" id="g-ord"></div>
+        <div class="verdict" id="g-note" style="min-height:84px"></div>
+      </div>
+      <div>
+<pre><span class="c">// สิ่งที่เราเขียน — ไม่มีใคร new ใครเลย</span>
+<span class="k">public class</span> OrdersController(OrderService svc) : ControllerBase;
+
+<span class="k">public class</span> OrderService(IOrderRepository repo, IEmailSender email);
+
+<span class="k">public class</span> SqlOrderRepository(ShopDbContext db) : IOrderRepository;
+
+<span class="k">public class</span> SmtpEmailSender(IOptions&lt;SmtpOptions&gt; opt) : IEmailSender;
+
+<span class="c">// สิ่งที่ container ทำแทนเรา (เทียบเท่าโค้ดนี้)</span>
+<span class="k">var</span> db      = <span class="k">new</span> ShopDbContext(options);
+<span class="k">var</span> repo    = <span class="k">new</span> SqlOrderRepository(db);
+<span class="k">var</span> email   = <span class="k">new</span> SmtpEmailSender(smtpOptions);
+<span class="k">var</span> svc     = <span class="k">new</span> OrderService(repo, email);
+<span class="k">var</span> ctrl    = <span class="k">new</span> OrdersController(svc);</pre>
+        <table style="margin-top:14px">
+          <tbody>
+            <tr><td>ลำดับการสร้าง</td><td>ลึกสุดก่อน แล้วประกอบย้อนขึ้น — เพราะต้องมีของครบก่อนจะ <code>new</code> ตัวที่ต้องใช้มันได้</td></tr>
+            <tr><td>ถ้าลืม register</td><td><code>InvalidOperationException: Unable to resolve service for type '...'</code> — เกิดตอนที่ container พยายามสร้างชั้นนั้น</td></tr>
+            <tr><td>Circular dependency</td><td>A ขอ B, B ขอ A → container โยน exception ตอน resolve เป็นสัญญาณว่า design ผิด ให้แยกส่วนที่ทั้งคู่ต้องใช้ออกเป็นตัวที่สาม</td></tr>
+            <tr><td>ตรวจล่วงหน้าได้</td><td>ใน Development .NET เปิด <code>ValidateOnBuild</code> + <code>ValidateScopes</code> ให้ — พังตอนสตาร์ต ดีกว่าพังตอนผู้ใช้กด</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section id="s4">
+    <h2><span class="no">04</span>Lifetime — เรื่องที่พลาดกันมากที่สุด</h2>
+    <p class="lead">เลือก lifetime ของ <code>ShopDbContext</code> แล้วดูว่าใน 2 HTTP request (แต่ละ request มี 2 ที่ที่ต้องใช้ DbContext) container สร้าง instance กี่ตัว และใครแชร์กับใคร ตัวเลข <code>#1 #2</code> คือ instance ต่างตัวกัน</p>
+    <div class="canvas">
+      <div class="pick">
+        <span class="grp">ShopDbContext เป็น</span>
+        <button type="button" data-lt="transient" aria-pressed="false">Transient</button>
+        <button type="button" data-lt="scoped" aria-pressed="true">Scoped</button>
+        <button type="button" data-lt="singleton" aria-pressed="false">Singleton</button>
+      </div>
+      <div class="appbox" id="appbox">
+        <b style="font-family:var(--code);font-size:12px;color:var(--sing)">Application (root scope)</b>
+        <span id="app-inst" style="font-size:13px"></span>
+      </div>
+      <div class="reqs">
+        <div class="req" data-l="HTTP Request A — scope ที่ 1">
+          <h4>GET /orders/1001</h4>
+          <div class="cons">
+            <div class="con"><span class="who">OrderService → SqlOrderRepository → ShopDbContext</span><span class="inst" data-slot="a1"></span></div>
+            <div class="con"><span class="who">AuditService → ShopDbContext</span><span class="inst" data-slot="a2"></span></div>
+          </div>
+        </div>
+        <div class="req" data-l="HTTP Request B — scope ที่ 2">
+          <h4>POST /orders</h4>
+          <div class="cons">
+            <div class="con"><span class="who">OrderService → SqlOrderRepository → ShopDbContext</span><span class="inst" data-slot="b1"></span></div>
+            <div class="con"><span class="who">AuditService → ShopDbContext</span><span class="inst" data-slot="b2"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tot">
+        <div class="stat"><small>instance ที่ถูกสร้างทั้งหมด</small><b id="st-inst">–</b></div>
+        <div class="stat"><small>ถูก Dispose เมื่อ</small><b id="st-disp" style="font-size:13.5px">–</b></div>
+        <div class="stat"><small>แชร์ข้าม request</small><b id="st-share" style="font-size:13.5px">–</b></div>
+      </div>
+      <div class="verdict" id="lt-note"></div>
+    </div>
+    <table style="margin-top:20px">
+      <thead><tr><th>Lifetime</th><th class="tran">Transient</th><th class="scop">Scoped</th><th class="sing">Singleton</th></tr></thead>
+      <tbody>
+        <tr><td>สร้างใหม่เมื่อ</td><td>ทุกครั้งที่มีคนขอ</td><td>ครั้งแรกของแต่ละ scope (= 1 request) แล้วใช้ซ้ำใน scope นั้น</td><td>ครั้งเดียวตลอดอายุแอป</td></tr>
+        <tr><td>Dispose เมื่อ</td><td>จบ scope ที่ขอมัน (container จำไว้ ถ้าเป็น <code>IDisposable</code>)</td><td>จบ request</td><td>ตอนแอปปิด</td></tr>
+        <tr><td>ต้อง thread-safe ไหม</td><td class="yes">ไม่ต้อง</td><td class="mid">ปกติไม่ต้อง (1 request = 1 thread) แต่ต้องระวังถ้าแตก task ขนานใน request เดียว</td><td class="no">ต้อง — หลาย request ใช้ตัวเดียวกันพร้อมกัน</td></tr>
+        <tr><td>เก็บ state ได้ไหม</td><td>ได้ (ตายพร้อมกัน)</td><td>ได้ เฉพาะ state ของ request นั้น</td><td class="no">ห้ามเก็บ state ของผู้ใช้/request — จะรั่วข้ามคน</td></tr>
+        <tr><td>เหมาะกับ</td><td>ตัวเบา ไม่มี state, validator, mapper, strategy</td><td>DbContext, repository, unit of work, อะไรที่ผูกกับ "งานหนึ่งชิ้น"</td><td>cache, config, HttpClient factory, ตัวที่สร้างแพงและไม่มี state</td></tr>
+        <tr><td>ใน .NET</td><td><code>AddTransient</code></td><td><code>AddScoped</code> · <code>AddDbContext</code> เป็น Scoped ให้อยู่แล้ว</td><td><code>AddSingleton</code></td></tr>
+      </tbody>
+    </table>
+    <p class="one"><strong>วิธีคิดที่ใช้ตัดสินใจได้เร็ว:</strong> ถามว่า "ของชิ้นนี้ผูกกับอะไร" — ผูกกับ <em>คำขอหนึ่งครั้ง</em> (มี transaction, มี user ปัจจุบัน) → Scoped · ผูกกับ <em>ทั้งแอป</em> (ไม่มี state, สร้างแพง) → Singleton · <em>ไม่ผูกกับอะไรเลย</em> (สร้างเมื่อไรก็เหมือนกัน) → Transient</p>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section id="s5">
+    <h2><span class="no">05</span>Captive dependency — bug ที่ compiler จับไม่ได้</h2>
+    <p class="lead">ถ้าตัวที่อายุยืนถือตัวที่อายุสั้นไว้ ตัวอายุสั้นจะถูก "กักขัง" ให้อยู่ยาวตามคนที่ถือมัน — <code>DbContext</code> ที่ควรตายพร้อม request กลายเป็นอยู่ตลอดอายุแอป</p>
+    <div class="two">
+      <div>
+        <div class="canvas" style="padding:18px">
+          <span class="tag bad">ผิด — Singleton ถือ Scoped</span>
+          <div class="cap">
+            <div class="bx sing"><b>CacheWarmer</b><small>Singleton — อยู่ตลอดอายุแอป</small></div>
+            <span class="arr">ถือไว้ →</span>
+            <div class="bx scop"><b>ShopDbContext</b><small>Scoped — ควรตายพร้อม request</small></div>
+          </div>
+          <p style="font-size:13.5px;color:var(--bad);margin:12px 0 0">ผลที่เกิด: DbContext ตัวเดียวถูกใช้ตลอดอายุแอป → change tracker บวมไม่หยุด, ข้อมูลที่ cache ไว้เก่าค้าง, และพังเมื่อหลาย request ใช้พร้อมกัน (DbContext ไม่ thread-safe)</p>
+        </div>
+        <div class="canvas" style="padding:18px;margin-top:16px">
+          <span class="tag good">ถูก — ขอ scope ใหม่ตอนใช้</span>
+          <div class="cap">
+            <div class="bx sing"><b>CacheWarmer</b><small>Singleton</small></div>
+            <span class="arr">ถือ →</span>
+            <div class="bx sing"><b>IServiceScopeFactory</b><small>Singleton — ปลอดภัย</small></div>
+            <span class="arr">สร้าง →</span>
+            <div class="bx scop"><b>scope ใหม่ → DbContext</b><small>ตายเมื่อจบงาน</small></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <table class="matrix">
+          <thead><tr><th>ตัวที่ถือ ↓ ถือตัวที่ →</th><th class="tran">Transient</th><th class="scop">Scoped</th><th class="sing">Singleton</th></tr></thead>
+          <tbody>
+            <tr><td>Transient</td><td class="y">ได้</td><td class="y">ได้</td><td class="y">ได้</td></tr>
+            <tr><td>Scoped</td><td class="w">ได้ แต่ Transient จะอยู่ยาวเท่า request</td><td class="y">ได้</td><td class="y">ได้</td></tr>
+            <tr><td>Singleton</td><td class="w">ได้ แต่ Transient จะอยู่ตลอดอายุแอป (ถ้ามี state = รั่ว)</td><td class="n">ห้าม — captive dependency</td><td class="y">ได้</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:14.5px;color:var(--ink-2);margin-top:12px">อ่านตารางนี้ได้เป็นกฎเดียว: <strong>ถือได้เฉพาะตัวที่อายุยืนเท่ากันหรือยืนกว่า</strong></p>
+        <div class="alert"><strong>ข่าวดี:</strong> .NET ตรวจให้ได้ตอนสตาร์ต ถ้าเปิด <code>ValidateScopes</code> — ซึ่งเปิดอยู่แล้วโดย default ใน Development แต่ <strong>ปิดใน Production</strong> จึงควรบังคับเปิดทุก environment เพื่อให้ bug โผล่ตอน deploy ไม่ใช่ตอนมีคนใช้</div>
+<pre class="good" style="margin-top:14px">builder.Host.UseDefaultServiceProvider((ctx, o) =&gt;
+{
+    o.ValidateScopes  = <span class="k">true</span>;   <span class="c">// จับ captive dependency</span>
+    o.ValidateOnBuild = <span class="k">true</span>;   <span class="c">// จับ service ที่ลืม register</span>
+});</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section id="s6">
+    <h2><span class="no">06</span>Background job — กรณีที่เจอ captive dependency บ่อยที่สุด</h2>
+    <p class="lead"><code>BackgroundService</code> ถูก register เป็น <strong>Singleton</strong> เพราะมันรันตลอดอายุแอป ดังนั้นจะ inject <code>DbContext</code> หรือ repository เข้า constructor ตรงๆ ไม่ได้ ต้องสร้าง scope ขึ้นมาเองทุกรอบงาน</p>
+    <div class="two">
+      <div>
+        <span class="tag bad">พังตอนสตาร์ต (หรือแย่กว่า: ไม่พังแต่ข้อมูลเพี้ยน)</span>
+<pre class="bad"><span class="k">public class</span> OrderSyncWorker(ShopDbContext db)   <span class="c">// ← Scoped เข้า Singleton</span>
+    : BackgroundService
+{
+    <span class="k">protected override async</span> Task ExecuteAsync(CancellationToken ct)
+    {
+        <span class="k">while</span> (!ct.IsCancellationRequested)
+        {
+            <span class="k">var</span> pending = <span class="k">await</span> db.Orders
+                .Where(o =&gt; o.Status == OrderStatus.Pending)
+                .ToListAsync(ct);
+            <span class="c">// ... db ตัวเดียวนี้จะอยู่กับ worker ตลอดอายุแอป</span>
+            <span class="k">await</span> Task.Delay(TimeSpan.FromMinutes(1), ct);
+        }
+    }
+}</pre>
+        <p style="font-size:14px;color:var(--ink-2);margin-top:8px">ถ้าเปิด <code>ValidateScopes</code> จะพังตอนสตาร์ตทันที (ซึ่งดี) ถ้าไม่เปิด มันจะรันได้ แล้วค่อยๆ เจอ: change tracker โตขึ้นทุกนาที, ข้อมูลที่อ่านมาเป็นของเก่าที่ถูก cache ไว้, และ connection ค้าง</p>
+      </div>
+      <div>
+        <span class="tag good">ถูก — 1 รอบงาน = 1 scope</span>
+<pre class="good"><span class="k">public class</span> OrderSyncWorker(
+    IServiceScopeFactory scopeFactory,          <span class="c">// Singleton — inject ได้</span>
+    ILogger&lt;OrderSyncWorker&gt; log) : BackgroundService
+{
+    <span class="k">protected override async</span> Task ExecuteAsync(CancellationToken ct)
+    {
+        <span class="k">using var</span> timer = <span class="k">new</span> PeriodicTimer(TimeSpan.FromMinutes(1));
+        <span class="k">while</span> (<span class="k">await</span> timer.WaitForNextTickAsync(ct))
+        {
+            <span class="k">try</span>
+            {
+                <span class="c">// scope ใหม่ทุกรอบ = DbContext สะอาดทุกรอบ เหมือน request หนึ่งครั้ง</span>
+                <span class="k">await using var</span> scope = scopeFactory.CreateAsyncScope();
+                <span class="k">var</span> svc = scope.ServiceProvider
+                               .GetRequiredService&lt;IOrderSyncService&gt;();
+                <span class="k">await</span> svc.SyncPendingAsync(ct);
+            }
+            <span class="k">catch</span> (Exception ex) <span class="k">when</span> (!ct.IsCancellationRequested)
+            {
+                log.LogError(ex, <span class="s">"sync รอบนี้ล้ม — รอบหน้าลองใหม่"</span>);
+                <span class="c">// ★ ห้ามให้ exception หลุดออกจาก ExecuteAsync</span>
+                <span class="c">//   ไม่งั้น worker ตายเงียบและไม่มีใครรู้</span>
+            }
+        }
+    }
+}</pre>
+        <table style="margin-top:14px">
+          <tbody>
+            <tr><td>ทำไมต้อง scope ต่อรอบ</td><td>เพื่อให้ DbContext, repository และ transaction ของรอบนั้นเกิดและตายพร้อมกัน — เหมือน request หนึ่งครั้ง</td></tr>
+            <tr><td><code>CreateAsyncScope</code></td><td>ใช้กับ service ที่เป็น <code>IAsyncDisposable</code> (DbContext เป็น) — ได้ dispose แบบ async ถูกต้อง</td></tr>
+            <tr><td>Hangfire / Quartz</td><td>ทั้งสองตัวสร้าง scope ต่อ job ให้อยู่แล้ว จึง inject Scoped เข้า job class ได้ตรงๆ — ต่างจาก <code>BackgroundService</code> ดิบ</td></tr>
+            <tr><td>หลาย instance</td><td>ถ้าแอปรันหลาย pod งานเดียวกันจะถูกหยิบซ้ำ — ต้องมี distributed lock หรือให้ job ทำงานแบบ idempotent</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section id="s7">
+    <h2><span class="no">07</span>กับดักอื่นที่เจอบ่อย</h2>
+    <table>
+      <thead><tr><th>อาการ / สิ่งที่เห็น</th><th>ปัญหาจริง</th><th>ทางแก้</th></tr></thead>
+      <tbody>
+        <tr><td>Constructor รับ 10 ตัว</td><td>ไม่ใช่ปัญหาของ DI — เป็นสัญญาณว่าคลาสนี้ทำหลายหน้าที่ (ละเมิด SRP)</td><td>แตกคลาสตามหน้าที่ · หรือรวมของที่มาด้วยกันเสมอเป็น facade เดียว — ไม่ใช่เปลี่ยนไปใช้ service locator เพื่อซ่อนจำนวน</td></tr>
+        <tr><td><code>provider.GetService&lt;T&gt;()</code> กระจายในโค้ดธุรกิจ</td><td><strong>Service Locator</strong> — กลับไปซ่อน dependency อีกครั้ง คลาสพึ่งอะไรดูจาก constructor ไม่ได้ และ mock ยาก</td><td>รับเข้ามาทาง constructor · ยอมรับได้เฉพาะที่ขอบระบบ (composition root, middleware, factory, background worker)</td></tr>
+        <tr><td>ต้องเลือก implementation ตอน runtime</td><td>เช่นเลือกช่องทางชำระเงินตามข้อมูลที่ผู้ใช้ส่งมา</td><td>inject <strong>factory</strong> (<code>Func&lt;string, IPaymentGateway&gt;</code>) หรือ inject <code>IEnumerable&lt;IPaymentGateway&gt;</code> ทั้งชุดแล้วเลือกเอง หรือใช้ <strong>keyed services</strong> (หัวข้อ 9)</td></tr>
+        <tr><td>Register interface เดียวหลาย class</td><td>คนส่วนใหญ่คิดว่าตัวหลังทับตัวหน้า</td><td>จริงคือ <em>เก็บทั้งหมด</em> — ขอเป็น <code>T</code> ได้ตัวที่ register <strong>ล่าสุด</strong> ขอเป็น <code>IEnumerable&lt;T&gt;</code> ได้ทั้งหมด · ถ้าตั้งใจจะทับใช้ <code>Replace()</code> หรือ <code>TryAdd*</code></td></tr>
+        <tr><td>ต้องใช้ <code>await</code> ตอนสร้าง service</td><td>container ในตัวของ .NET สร้าง object แบบ sync เท่านั้น</td><td>constructor ต้องเบาและไม่ทำ I/O · โหลดข้อมูลตั้งต้นด้วย <code>IHostedService</code> ตอนสตาร์ต หรือ lazy-init ครั้งแรกที่ใช้ (<code>AsyncLazy</code>/<code>SemaphoreSlim</code>)</td></tr>
+        <tr><td>Constructor ทำงานหนัก / เรียก DB</td><td>ทุก request ช้าลง และ exception ตอนสร้างจะอ่านยากมาก</td><td>constructor แค่รับของมาเก็บ — งานจริงไปอยู่ใน method</td></tr>
+        <tr><td><code>new HttpClient()</code> เอง</td><td>socket exhaustion และไม่รู้เรื่อง DNS ที่เปลี่ยน</td><td><code>AddHttpClient&lt;T&gt;()</code> แล้ว inject typed client — factory จัดการ pooling และ handler lifetime ให้</td></tr>
+        <tr><td>Register class เป็น concrete type ทุกตัว</td><td>ไม่ผิด แต่ถ้าไม่มี interface ก็ mock ในเทสไม่ได้</td><td>ใส่ interface เฉพาะจุดที่<em>ต้องสลับหรือต้อง mock</em> จริง — ไม่ต้องมี <code>IThing</code> ให้ทุกคลาส</td></tr>
+        <tr><td>Dispose ของเอง</td><td>เรียก <code>Dispose()</code> ของ service ที่ container สร้าง</td><td>อย่าทำ — container เป็นเจ้าของอายุของมัน จะ dispose ให้ตอนจบ scope (ยกเว้น instance ที่เรา <code>new</code> แล้วส่งให้ container ด้วย <code>AddSingleton(instance)</code> — อันนั้นเราดูแลเอง)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 8 ============ -->
+  <section id="s8">
+    <h2><span class="no">08</span>ผลพลอยได้ที่ใหญ่ที่สุด — เทสง่ายขึ้น</h2>
+    <div class="two">
+      <div>
+        <p>นี่คือเหตุผลที่จับต้องได้ที่สุดของ DI: เมื่อคลาสรับของเข้ามาทาง constructor เทสก็แค่ยื่นของปลอมให้ — ไม่ต้องมี DB, ไม่ต้องมี SMTP, ไม่ต้องมี container</p>
+<pre class="good"><span class="c">// Unit test — ไม่มี DI container, ไม่มี I/O</span>
+[Fact]
+<span class="k">public async</span> Task Place_WhenSaved_SendsConfirmationEmail()
+{
+    <span class="c">// Arrange — ยื่นของปลอมเข้าไปตรงๆ</span>
+    <span class="k">var</span> repo  = <span class="k">new</span> FakeOrderRepository();
+    <span class="k">var</span> email = Substitute.For&lt;IEmailSender&gt;();
+    <span class="k">var</span> svc   = <span class="k">new</span> OrderService(repo, email, NullLogger&lt;OrderService&gt;.Instance);
+
+    <span class="c">// Act</span>
+    <span class="k">await</span> svc.Place(<span class="k">new</span> Order { Id = 1, Email = <span class="s">"a@b.com"</span> }, <span class="k">default</span>);
+
+    <span class="c">// Assert</span>
+    repo.Saved.Should().ContainSingle(o =&gt; o.Id == 1);
+    <span class="k">await</span> email.Received(1).SendAsync(<span class="s">"a@b.com"</span>, Arg.Any&lt;<span class="k">string</span>&gt;(), Arg.Any&lt;CancellationToken&gt;());
+}</pre>
+      </div>
+      <div>
+        <p>และเมื่อต้องเทสทั้งเส้น (integration test) ก็สลับของจริงบางตัวออกที่ระดับ container โดยไม่แตะโค้ดธุรกิจเลย</p>
+<pre class="good"><span class="c">// Integration test — ใช้ container จริง แต่สลับ email เป็นของปลอม</span>
+<span class="k">public class</span> ApiFactory : WebApplicationFactory&lt;Program&gt;
+{
+    <span class="k">protected override void</span> ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureTestServices(services =&gt;
+        {
+            <span class="c">// Replace = ทับตัวที่ Program.cs register ไว้</span>
+            services.Replace(ServiceDescriptor
+                .Scoped&lt;IEmailSender, CapturingEmailSender&gt;());
+
+            <span class="c">// ชี้ DbContext ไปที่ Testcontainers</span>
+            services.RemoveAll&lt;DbContextOptions&lt;ShopDbContext&gt;&gt;();
+            services.AddDbContext&lt;ShopDbContext&gt;(o =&gt; o.UseSqlServer(_sql.GetConnectionString()));
+        });
+    }
+}</pre>
+        <p class="one" style="margin-top:12px"><strong>ข้อสังเกต:</strong> ถ้าเขียนเทสแล้วต้องพยายามอย่างมากเพื่อ mock อะไรบางอย่าง (ต้อง mock static, ต้องตั้ง container ทั้งชุด, ต้องแก้ internal ให้เป็น public) นั่นมักเป็นสัญญาณว่า dependency ตัวนั้นยังไม่ได้ถูก inject เข้ามา — ไม่ใช่ปัญหาของเทส</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 9 ============ -->
+  <section id="s9">
+    <h2><span class="no">09</span>ท่าที่ใช้บ่อยใน .NET 8/10</h2>
+    <div class="two">
+      <div>
+        <h3>Config เป็น service — <code>IOptions</code></h3>
+<pre><span class="c">// appsettings.json → class ที่ตรวจค่าตอนสตาร์ต</span>
+builder.Services
+    .AddOptions&lt;SmtpOptions&gt;()
+    .Bind(builder.Configuration.GetSection(<span class="s">"Smtp"</span>))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();        <span class="c">// config ผิด = พังตอน deploy ไม่ใช่ตอนส่งเมลจริง</span>
+
+<span class="c">// ใช้: IOptions&lt;T&gt; (คงที่) · IOptionsSnapshot&lt;T&gt; (ต่อ request)</span>
+<span class="c">//      IOptionsMonitor&lt;T&gt; (อ่านค่าใหม่เมื่อไฟล์เปลี่ยน — ใช้ใน Singleton)</span></pre>
+
+        <h3 style="margin-top:20px">เลือก implementation ด้วยชื่อ — keyed services</h3>
+<pre>builder.Services.AddKeyedScoped&lt;IPaymentGateway, PromptPayGateway&gt;(<span class="s">"promptpay"</span>);
+builder.Services.AddKeyedScoped&lt;IPaymentGateway, CardGateway&gt;(<span class="s">"card"</span>);
+
+<span class="c">// ขอแบบระบุ key</span>
+<span class="k">public class</span> CheckoutService([FromKeyedServices(<span class="s">"card"</span>)] IPaymentGateway gw);
+
+<span class="c">// หรือเลือกตอน runtime</span>
+<span class="k">public class</span> CheckoutService(IServiceProvider sp)
+{
+    <span class="k">public</span> Task Pay(<span class="k">string</span> method, Order o) =&gt;
+        sp.GetRequiredKeyedService&lt;IPaymentGateway&gt;(method).ChargeAsync(o);
+}</pre>
+      </div>
+      <div>
+        <h3>ได้ทั้งชุด — <code>IEnumerable&lt;T&gt;</code></h3>
+<pre>builder.Services.AddScoped&lt;IOrderValidator, StockValidator&gt;();
+builder.Services.AddScoped&lt;IOrderValidator, CreditLimitValidator&gt;();
+builder.Services.AddScoped&lt;IOrderValidator, AddressValidator&gt;();
+
+<span class="c">// รับมาทั้งหมด แล้วรันทุกตัว — เพิ่ม rule ใหม่ = เพิ่ม class + 1 บรรทัด register</span>
+<span class="k">public class</span> OrderService(IEnumerable&lt;IOrderValidator&gt; validators)
+{
+    <span class="k">public async</span> Task Place(Order o, CancellationToken ct)
+    {
+        <span class="k">foreach</span> (<span class="k">var</span> v <span class="k">in</span> validators) <span class="k">await</span> v.ValidateAsync(o, ct);
+        <span class="c">// ...</span>
+    }
+}</pre>
+
+        <h3 style="margin-top:20px">จัดระเบียบ Program.cs</h3>
+<pre><span class="c">// แยกตามชั้น — ต่อกับหน้า layer-architecture</span>
+builder.Services
+    .AddApplication()                          <span class="c">// use case / handler</span>
+    .AddInfrastructure(builder.Configuration);  <span class="c">// DbContext, repository, HTTP client</span>
+
+<span class="c">// Shop.Infrastructure/DependencyInjection.cs</span>
+<span class="k">public static</span> IServiceCollection AddInfrastructure(
+    <span class="k">this</span> IServiceCollection s, IConfiguration cfg)
+{
+    s.AddDbContext&lt;ShopDbContext&gt;(o =&gt;
+        o.UseSqlServer(cfg.GetConnectionString(<span class="s">"Shop"</span>)));      <span class="c">// Scoped</span>
+    s.AddScoped&lt;IUnitOfWork&gt;(sp =&gt; sp.GetRequiredService&lt;ShopDbContext&gt;());
+    s.AddScoped&lt;IOrderRepository, SqlOrderRepository&gt;();
+    s.AddSingleton&lt;IClock, SystemClock&gt;();                        <span class="c">// ไม่มี state</span>
+    s.AddHttpClient&lt;IShippingApi, ShippingApi&gt;();                 <span class="c">// typed client</span>
+    <span class="k">return</span> s;
+}</pre>
+        <p class="one" style="margin-top:12px"><strong>ข้อควรรู้เรื่อง <code>TryAdd</code>:</strong> ไลบรารีที่เขียนให้คนอื่นใช้ควร register ด้วย <code>TryAddScoped</code> / <code>TryAddSingleton</code> เพื่อไม่ทับของที่ผู้ใช้ตั้งเอง — ส่วนโค้ดในแอปของเราใช้ <code>Add*</code> ธรรมดาได้</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 ============ -->
+  <section id="s10">
+    <h2>Checklist</h2>
+    <div class="check">
+      <label><input type="checkbox"><span>ไม่มี <code>new</code> ของ service / repository / HttpClient ในโค้ดธุรกิจ — ประกอบที่ Program.cs เท่านั้น<small>หัวข้อ 1</small></span></label>
+      <label><input type="checkbox"><span>รับ dependency ทาง constructor ทั้งหมด อ่าน constructor แล้วรู้ว่าคลาสพึ่งอะไร<small>หัวข้อ 2</small></span></label>
+      <label><input type="checkbox"><span>เปิด <code>ValidateScopes</code> และ <code>ValidateOnBuild</code> ทุก environment ไม่ใช่แค่ Development<small>หัวข้อ 5</small></span></label>
+      <label><input type="checkbox"><span>ไม่มี Singleton ตัวใดถือ Scoped ไว้ (DbContext, repository, unit of work)<small>หัวข้อ 5</small></span></label>
+      <label><input type="checkbox"><span><code>BackgroundService</code> ใช้ <code>IServiceScopeFactory</code> สร้าง scope ต่อรอบงาน และดัก exception ไม่ให้หลุดออกจาก <code>ExecuteAsync</code><small>หัวข้อ 6</small></span></label>
+      <label><input type="checkbox"><span>Singleton ทุกตัวไม่เก็บ state ของผู้ใช้หรือของ request และ thread-safe<small>หัวข้อ 4</small></span></label>
+      <label><input type="checkbox"><span>Constructor ไม่ทำ I/O และไม่ทำงานหนัก — แค่รับของมาเก็บ<small>หัวข้อ 7</small></span></label>
+      <label><input type="checkbox"><span>ไม่มี <code>GetService</code> / <code>GetRequiredService</code> ในโค้ดธุรกิจ (มีได้แค่ที่ขอบระบบ)<small>หัวข้อ 7</small></span></label>
+      <label><input type="checkbox"><span>HttpClient มาจาก <code>AddHttpClient</code> ไม่ใช่ <code>new</code><small>หัวข้อ 7</small></span></label>
+      <label><input type="checkbox"><span>Config ผ่าน <code>IOptions</code> + <code>ValidateOnStart</code> ไม่อ่าน <code>IConfiguration</code> ดิบกลางโค้ด<small>หัวข้อ 9</small></span></label>
+      <label><input type="checkbox"><span>interface มีเฉพาะจุดที่ต้องสลับหรือต้อง mock จริง ไม่ใส่ให้ทุกคลาสโดยอัตโนมัติ<small>หัวข้อ 7</small></span></label>
+    </div>
+  </section>
+
+  <footer>DI ไม่ใช่เรื่องของ container — container เป็นแค่เครื่องมือ สิ่งที่ DI ให้จริงๆ คือ "คลาสนี้พึ่งอะไร" กลายเป็นสิ่งที่อ่านออกจาก constructor และ "ของจริงคืออะไร" ถูกตัดสินที่จุดเดียวตอนสตาร์ตแอป · ส่วน lifetime คือคำถามว่าของแต่ละชิ้นผูกกับ request, กับทั้งแอป, หรือไม่ผูกกับอะไรเลย</footer>
+</main>
+
+<script>
+(function(){
+  /* ---------------- 3. object graph ---------------- */
+  var NODES = [
+    { d:0, name:"OrdersController", note:"ขอ OrderService", lt:"scoped" },
+    { d:1, name:"OrderService",     note:"ขอ IOrderRepository, IEmailSender", lt:"scoped" },
+    { d:2, name:"SqlOrderRepository", note:"ขอ ShopDbContext", lt:"scoped" },
+    { d:3, name:"ShopDbContext",    note:"ไม่ขอ service อื่น — ใบไม้", lt:"scoped", leaf:true },
+    { d:2, name:"SmtpEmailSender",  note:"ขอ IOptions<SmtpOptions>", lt:"scoped" },
+    { d:3, name:"IOptions<SmtpOptions>", note:"มาจาก config — ใบไม้", lt:"singleton", leaf:true }
+  ];
+  // ลำดับที่ container ลงไปหา (resolve) แล้วประกอบย้อนขึ้น (construct)
+  var STEPS = [
+    { i:0, phase:"down", text:"<b>เริ่มที่ยอด</b>container ถูกขอ OrdersController → เห็นว่า constructor ต้องการ OrderService จึงยังสร้างไม่ได้ ต้องลงไปหาก่อน" },
+    { i:1, phase:"down", text:"<b>ลงชั้นที่ 2</b>OrderService ต้องการ IOrderRepository และ IEmailSender → ยังสร้างไม่ได้ ลงต่อ" },
+    { i:2, phase:"down", text:"<b>ลงชั้นที่ 3</b>SqlOrderRepository ต้องการ ShopDbContext → ลงต่ออีกชั้น" },
+    { i:3, phase:"up",   text:"<b>ถึงใบไม้ → สร้างได้แล้ว</b>ShopDbContext ไม่ขออะไรอีก (ได้ options จาก config) container <code>new</code> ตัวนี้เป็นตัวแรก" },
+    { i:2, phase:"up",   text:"<b>ประกอบย้อนขึ้น</b>มี DbContext แล้ว จึง <code>new SqlOrderRepository(db)</code> ได้" },
+    { i:5, phase:"up",   text:"<b>กิ่งที่สอง</b>กลับมาที่ IEmailSender — IOptions&lt;SmtpOptions&gt; เป็นใบไม้เช่นกัน สร้างได้ทันที" },
+    { i:4, phase:"up",   text:"<b>ประกอบกิ่งที่สอง</b><code>new SmtpEmailSender(options)</code>" },
+    { i:1, phase:"up",   text:"<b>ของครบแล้ว</b>ทั้ง repo และ email พร้อม → <code>new OrderService(repo, email)</code>" },
+    { i:0, phase:"up",   text:"<b>เสร็จ — ได้ยอดกลับมา</b><code>new OrdersController(svc)</code> แล้วส่งให้ MVC ใช้งาน · ทั้ง graph นี้ถูกสร้างใหม่ทุก request และถูก dispose พร้อมกันตอนจบ request" }
+  ];
+  var gIdx = -1;
+  var graphEl = document.getElementById("graph");
+  var ordEl = document.getElementById("g-ord");
+  var noteEl = document.getElementById("g-note");
+
+  NODES.forEach(function(n, i){
+    var row = document.createElement("div");
+    row.className = "lvl";
+    var ind = document.createElement("span");
+    ind.className = "ind";
+    ind.style.width = (n.d * 26) + "px";
+    ind.innerHTML = n.d ? '<span class="drop">└─</span>' : "";
+    var b = document.createElement("div");
+    b.className = "gnode" + (n.leaf ? " leaf" : "");
+    var esc = function(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); };
+    b.innerHTML = esc(n.name) + '<small>' + esc(n.note) + '</small>';
+    b.dataset.i = i;
+    row.appendChild(ind); row.appendChild(b);
+    graphEl.appendChild(row);
+  });
+  var gnodes = graphEl.querySelectorAll(".gnode");
+
+  STEPS.forEach(function(s, k){
+    var sp = document.createElement("span");
+    sp.textContent = (s.phase === "down" ? "↓ " : "↑ new ") + NODES[s.i].name;
+    sp.dataset.k = k;
+    ordEl.appendChild(sp);
+  });
+  var ordItems = ordEl.querySelectorAll("span");
+
+  function gRender(){
+    var cur = gIdx >= 0 ? STEPS[gIdx] : null;
+    var built = {};
+    for (var k = 0; k <= gIdx; k++) if (STEPS[k].phase === "up") built[STEPS[k].i] = true;
+    Array.prototype.forEach.call(gnodes, function(b, i){
+      b.classList.toggle("on", !!cur && cur.i === i);
+      b.classList.toggle("dim", gIdx >= 0 && !built[i] && (!cur || cur.i !== i));
+    });
+    Array.prototype.forEach.call(ordItems, function(sp, k){ sp.classList.toggle("on", k <= gIdx); });
+    var btn = document.getElementById("g-step");
+    btn.textContent = gIdx >= STEPS.length - 1 ? "▶ เริ่มใหม่" : "▶ ก้าวถัดไป";
+    noteEl.innerHTML = cur ? cur.text
+      : "<b>ยังไม่เริ่ม</b>กด “ก้าวถัดไป” เพื่อดูว่า container ไล่ลงไปหา dependency ทีละชั้น (↓) แล้วประกอบย้อนขึ้นมา (↑ new) อย่างไร";
+  }
+  document.getElementById("g-step").addEventListener("click", function(){
+    gIdx = (gIdx >= STEPS.length - 1) ? 0 : gIdx + 1;
+    gRender();
+  });
+  document.getElementById("g-reset").addEventListener("click", function(){ gIdx = -1; gRender(); });
+  gRender();
+
+  /* ---------------- 4. lifetime simulator ---------------- */
+  var SLOTS = ["a1","a2","b1","b2"];
+  var LT = {
+    transient: {
+      ids: { a1:"#1", a2:"#2", b1:"#3", b2:"#4" },
+      inst: 4, disp: "จบ request ที่ขอมัน", share: "ไม่แชร์เลย", app: "ไม่มี instance ค้างอยู่ระดับแอป",
+      note: "<b>Transient — ทุกครั้งที่มีคนขอ ได้ตัวใหม่</b>ใน request A ทั้ง OrderService และ AuditService ได้ DbContext <em>ต่างตัวกัน</em> (#1 กับ #2) ผลคือสองตัวนี้มี change tracker แยกกันและอยู่ต่าง transaction — บันทึกผ่าน #1 แล้วอ่านจาก #2 จะไม่เห็นข้อมูล และ <code>SaveChanges()</code> ของแต่ละตัวเป็น transaction ของตัวเอง" +
+            "<span class='warnrow'>✕ ผิดสำหรับ DbContext — เสียคุณสมบัติ Unit of Work ทั้งหมด และเปิด connection มากเกินจำเป็น</span>" +
+            "<span class='okrow'>✓ เหมาะกับตัวเบาที่ไม่มี state เช่น validator, mapper, strategy</span>"
+    },
+    scoped: {
+      ids: { a1:"#1", a2:"#1", b1:"#2", b2:"#2" },
+      inst: 2, disp: "จบ request (ทุกตัวใน scope พร้อมกัน)", share: "ไม่แชร์ข้าม request", app: "ไม่มี instance ค้างอยู่ระดับแอป",
+      note: "<b>Scoped — 1 request = 1 instance</b>ใน request A ทั้งสองที่ได้ <em>ตัวเดียวกัน</em> (#1) จึงอยู่ใน change tracker และ transaction เดียวกัน — <code>SaveChanges()</code> ครั้งเดียวบันทึกทุกอย่างพร้อมกัน ส่วน request B ได้ #2 คนละตัว ข้อมูลไม่ปนกัน และ dispose เมื่อจบ request" +
+            "<span class='okrow'>✓ ถูกต้องสำหรับ DbContext, repository, unit of work — และเป็นค่าที่ <code>AddDbContext</code> ตั้งให้อยู่แล้ว</span>"
+    },
+    singleton: {
+      ids: { a1:"#1", a2:"#1", b1:"#1", b2:"#1" },
+      inst: 1, disp: "ตอนแอปปิด", share: "แชร์ทุก request ทุกผู้ใช้", app: "instance #1 อยู่ที่นี่ — ทุก request ชี้มาที่ตัวนี้",
+      note: "<b>Singleton — ตัวเดียวตลอดอายุแอป</b>ทั้ง 2 request และทุกผู้ใช้ใช้ DbContext ตัวเดียวกัน (#1) change tracker จะโตขึ้นเรื่อยๆ ไม่มีวันถูกล้าง ข้อมูลที่เคยอ่านค้างเป็นของเก่า และเมื่อสอง request เข้าพร้อมกันจะพังเพราะ DbContext ไม่ thread-safe" +
+            "<span class='warnrow'>✕ อันตรายที่สุดสำหรับ DbContext · และถ้า Singleton ตัวอื่นไป inject DbContext ที่เป็น Scoped ก็จะได้ผลเหมือนกันโดยไม่ตั้งใจ (captive dependency — หัวข้อ 5)</span>" +
+            "<span class='okrow'>✓ เหมาะกับ cache, IOptions, IClock, HttpClient factory — ตัวที่ไม่มี state และ thread-safe</span>"
+    }
+  };
+  function setLt(lt){
+    var d = LT[lt];
+    document.querySelectorAll("[data-lt]").forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.lt === lt);
+    });
+    SLOTS.forEach(function(s){
+      var el = document.querySelector('[data-slot="' + s + '"]');
+      el.textContent = "ShopDbContext " + d.ids[s];
+      el.className = "inst " + lt;
+    });
+    document.getElementById("st-inst").textContent = d.inst;
+    document.getElementById("st-disp").textContent = d.disp;
+    document.getElementById("st-share").textContent = d.share;
+    document.getElementById("app-inst").textContent = d.app;
+    document.getElementById("appbox").style.borderColor = lt === "singleton" ? "var(--sing)" : "var(--line)";
+    document.getElementById("appbox").style.background = lt === "singleton" ? "#F7F2FA" : "#F8FAFB";
+    document.getElementById("lt-note").innerHTML = d.note;
+  }
+  document.querySelectorAll("[data-lt]").forEach(function(b){
+    b.addEventListener("click", function(){ setLt(b.dataset.lt); });
+  });
+  setLt("scoped");
+})();
+</script>
+</body>
+</html>
