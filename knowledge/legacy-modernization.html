@@ -121,6 +121,18 @@
   .check small{display:block;color:var(--ink-2);font-size:13px}
   footer{margin-top:64px;font-size:14px;color:var(--ink-2)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* article prev / next navigation */
+.article-pager{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:stretch;margin-top:52px}
+.article-pager__link,.article-pager__hub{box-sizing:border-box;text-decoration:none;color:var(--ink,#1b2a41);background:var(--paper2,#fff);border:1.5px solid var(--ink,#1b2a41);border-radius:8px;padding:12px 15px;min-height:72px;display:flex;flex-direction:column;justify-content:center;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.article-pager__link:hover,.article-pager__hub:hover{transform:translateY(-2px);box-shadow:4px 4px 0 rgba(27,42,65,.12)}
+.article-pager__link small,.article-pager__hub small{font-family:var(--code,ui-monospace,monospace);font-size:10.5px;letter-spacing:.04em;color:var(--ink2,var(--ink-2,#4a5a6e));margin-bottom:3px}
+.article-pager__link strong,.article-pager__hub strong{font-size:14px;line-height:1.35}
+.article-pager__next{text-align:right;align-items:flex-end}
+.article-pager__hub{min-width:126px;text-align:center;align-items:center;border-color:var(--line,#b9c4d0);background:rgba(255,255,255,.56)}
+.article-pager__empty{min-height:72px}
+@media(max-width:640px){.article-pager{grid-template-columns:1fr;gap:8px}.article-pager__empty{display:none}.article-pager__hub{min-width:0;order:-1}.article-pager__next{text-align:left;align-items:flex-start}}
+
 </style>
 </head>
 <body>
@@ -486,7 +498,8 @@ ORDER BY d, src;
     </div>
   </section>
 
-  <footer>Modernization ที่ดีไม่ใช่วันที่สลับระบบใหม่ทั้งก้อน แต่คือวันธรรมดาหลายสิบวันที่มีบางส่วนย้ายไปโดยไม่มีใครสังเกต — จนวันหนึ่งระบบเดิมไม่มีอะไรเหลือให้ทำแล้ว</footer>
+  <div class="article-pager" aria-label="นำทางบทความ"><a class="article-pager__link article-pager__prev" href="flood-fill.html"><small>← บทก่อนหน้า</small><strong>Flood Fill</strong></a><a class="article-pager__hub" href="../knowledge.html"><small>KNOWLEDGE</small><strong>รวมสาระ</strong></a><a class="article-pager__link article-pager__next" href="oop.html"><small>บทถัดไป →</small><strong>OOP</strong></a></div>
+<footer>Modernization ที่ดีไม่ใช่วันที่สลับระบบใหม่ทั้งก้อน แต่คือวันธรรมดาหลายสิบวันที่มีบางส่วนย้ายไปโดยไม่มีใครสังเกต — จนวันหนึ่งระบบเดิมไม่มีอะไรเหลือให้ทำแล้ว</footer>
 </main>
 
 <script>
